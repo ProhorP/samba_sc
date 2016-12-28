@@ -953,8 +953,9 @@ failed:
 	 * Do not delete an existing valid credential cache, if the user
 	 * e.g. enters a wrong password
 	 */
-	if ((strequal(krb5_cc_type, "FILE") || strequal(krb5_cc_type, "WRFILE"))
+	if ((strequal(krb5_cc_type, "FILE") || strequal(krb5_cc_type, "WRFILE") || strequal(krb5_cc_type, "KEYRING"))
 	    && user_ccache_file != NULL) {
+		DEBUG(10,("winbindd_raw_kerberos_login: do not delete an existing valid credential cache\n"));
 		return result;
 	}
 
