@@ -364,6 +364,12 @@ static krb5_error_code fill_mem_keytab_from_system_keytab(krb5_context krbctx,
 	my_fqdn[0] = '\0';
 	name_to_fqdn(my_fqdn, lp_netbios_name());
 
+	if (!strlower_m(my_fqdn)) {
+		ret = ENOMEM;
+		goto out;
+	}
+	DEBUG(10,("fill_mem_keytab_from_system_keytab: with fqdn %s.\n", my_fqdn));
+
 	err = asprintf(&valid_princ_formats[0],
 			"%s$@%s", my_name, lp_realm());
 	if (err == -1) {
