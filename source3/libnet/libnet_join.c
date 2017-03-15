@@ -356,6 +356,7 @@ static ADS_STATUS libnet_join_precreate_machine_acct(TALLOC_CTX *mem_ctx,
 	LDAPMessage *res = NULL;
 	const char *attrs[] = { "dn", NULL };
 	bool moved = false;
+	const char *initial_account_ou = r->in.account_ou;
 
 	status = ads_check_ou_dn(mem_ctx, r->in.ads, &r->in.account_ou);
 	if (!ADS_ERR_OK(status)) {
@@ -400,6 +401,16 @@ static ADS_STATUS libnet_join_precreate_machine_acct(TALLOC_CTX *mem_ctx,
 	} else  if ((status.error_type == ENUM_ADS_ERROR_LDAP) &&
 		    (status.err.rc == LDAP_ALREADY_EXISTS)) {
 		status = ADS_SUCCESS;
+
+		if (initial_account_ou == NULL) {
+			/*
+			 * Account already existed and
+			 * admin didn't explicitly specify
+			 * a different OU. Don't move the
+			 * account, just return.
+			 */
+			return status;
+		}
 	}
 
 	if (!ADS_ERR_OK(status)) {
