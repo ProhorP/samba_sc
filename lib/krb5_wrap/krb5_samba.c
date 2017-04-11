@@ -1591,7 +1591,7 @@ krb5_error_code smb_krb5_kt_open(krb5_context context,
 	int cmp;
 
 	if (keytab_name_req == NULL) {
-		return KRB5_KT_BADNAME;
+		goto open_keytab;
 	}
 
 	if (keytab_name_req[0] == '/') {
