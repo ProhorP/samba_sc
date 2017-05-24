@@ -358,7 +358,7 @@ static int proxy_search_bytree(struct ldb_module *module, struct ldb_request *re
 	ldb_dn_add_base(base, proxy->olddn);
 
 	ldb_debug(ldb, LDB_DEBUG_FATAL, "proxying: '%s' with dn '%s' \n", 
-		  ldb_filter_from_tree(ac, newreq->op.search.tree), ldb_dn_get_linearized(newreq->op.search.base));
+		  ldb_filter_from_tree(ac, req->op.search.tree), ldb_dn_get_linearized(req->op.search.base));
 	for (i = 0; req->op.search.attrs && req->op.search.attrs[i]; i++) {
 		ldb_debug(ldb, LDB_DEBUG_FATAL, "attr: '%s'\n", req->op.search.attrs[i]);
 	}
