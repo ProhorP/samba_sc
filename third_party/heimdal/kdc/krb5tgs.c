@@ -1482,6 +1482,8 @@ server_lookup:
 	Realm req_rlm;
 	krb5_realm *realms;
 
+	kdc_log(context, config, 5,
+		"Advise policy plugin of failure reason for tgs fetching.");
 	priv->error_code = ret; /* advise policy plugin of failure reason */
 	ret2 = _kdc_referral_policy(priv);
 	if (ret2 == 0) {
@@ -1661,6 +1663,8 @@ server_lookup:
 	    if(t->enc_part.kvno){
 		second_kvno = *t->enc_part.kvno;
 		kvno_ptr = &second_kvno;
+		kdc_log(context, config, 5,
+			"Additional ticket has second_kvno %d", second_kvno);
 	    }
 	    ret = _kdc_db_fetch(context, config, p,
 				HDB_F_GET_KRBTGT, kvno_ptr,
@@ -1669,6 +1673,8 @@ server_lookup:
 	    if(ret){
 		if (ret == HDB_ERR_NOENTRY)
 		    ret = KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN;
+		kdc_log(context, config, 4,
+			"User-to-user service principal (TGS) unknown");
 		kdc_audit_addreason((kdc_request_t)priv,
 				    "User-to-user service principal (TGS) unknown");
 		krb5_xfree(tpn);
@@ -1678,6 +1684,8 @@ server_lookup:
 				  t->enc_part.etype, &uukey);
 	    if(ret){
 		ret = KRB5KDC_ERR_ETYPE_NOSUPP; /* XXX */
+		kdc_log(context, config, 4,
+			"User-to-user enctype not supported");
 		kdc_audit_addreason((kdc_request_t)priv,
 				    "User-to-user enctype not supported");
 		krb5_xfree(tpn);
@@ -1685,6 +1693,8 @@ server_lookup:
 	    }
 	    ret = krb5_decrypt_ticket(context, t, &uukey->key, &adtkt, 0);
 	    if(ret) {
+		kdc_log(context, config, 4,
+			"User-to-user TGT decrypt failure");
 		kdc_audit_addreason((kdc_request_t)priv,
 				    "User-to-user TGT decrypt failure");
 		krb5_xfree(tpn);
@@ -1693,6 +1703,8 @@ server_lookup:
 
 	    ret = _kdc_verify_flags(context, config, &adtkt, tpn);
 	    if (ret) {
+		kdc_log(context, config, 4,
+			"User-to-user TGT expired or invalid");
 		kdc_audit_addreason((kdc_request_t)priv,
 				    "User-to-user TGT expired or invalid");
 		krb5_xfree(tpn);
