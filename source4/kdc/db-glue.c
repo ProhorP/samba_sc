@@ -2453,6 +2453,7 @@ static krb5_error_code samba_kdc_fetch_client(krb5_context context,
 				      mem_ctx, principal, user_attrs,
 				      &realm_dn, &msg);
 	if (ret != 0) {
+		DEBUG(5, ("samba_kdc_fetch_client: failed for samba_kdc_lookup_client()\n"));
 		return ret;
 	}
 
@@ -2460,6 +2461,10 @@ static krb5_error_code samba_kdc_fetch_client(krb5_context context,
 				      principal, SAMBA_KDC_ENT_TYPE_CLIENT,
 				      flags, kvno,
 				      realm_dn, msg, entry);
+	if (ret != 0) {
+		krb5_warnx(context, "samba_kdc_fetch_client: message2entry failed");
+	}
+
 	return ret;
 }
 
@@ -2825,6 +2830,7 @@ static krb5_error_code samba_kdc_fetch_server(krb5_context context,
 	ret = samba_kdc_lookup_server(context, kdc_db_ctx, mem_ctx, principal,
 				      flags, server_attrs, &realm_dn, &msg);
 	if (ret != 0) {
+		DEBUG(5, ("samba_kdc_fetch_server: failed for samba_kdc_lookup_server()\n"));
 		return ret;
 	}
 
@@ -2998,6 +3004,7 @@ static krb5_error_code samba_kdc_lookup_realm(krb5_context context,
 	status = dsdb_trust_routing_table_load(kdc_db_ctx->samdb,
 					       frame, &trt);
 	if (!NT_STATUS_IS_OK(status)) {
+		DEBUG(3, ("samba_kdc_lookup_realm: dsdb_trust_routing_table_load() failed: %s\n", nt_errstr(status)));
 		TALLOC_FREE(frame);
 		return EINVAL;
 	}

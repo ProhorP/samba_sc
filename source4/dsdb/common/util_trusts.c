@@ -419,8 +419,9 @@ static NTSTATUS dsdb_trust_parse_crossref_info(TALLOC_CTX *mem_ctx,
 		return NT_STATUS_NO_MEMORY;
 	}
 
-	nc_dn = samdb_result_dn(sam_ctx, frame, msg, "ncName", NULL);
+	nc_dn = samdb_result_dn(sam_ctx, frame, msg, "nCName", NULL);
 	if (nc_dn == NULL) {
+		DEBUG(3, ("dsdb_trust_parse_crossref_info: failed to found nCName for crossRef class object of domain %s\n", netbios));
 		TALLOC_FREE(frame);
 		return NT_STATUS_INTERNAL_DB_CORRUPTION;
 	}
@@ -1038,10 +1039,10 @@ NTSTATUS dsdb_trust_xref_forest_info(TALLOC_CTX *mem_ctx,
 			return NT_STATUS_INTERNAL_DB_CORRUPTION;
 		}
 
-		nc_dn = samdb_result_dn(sam_ctx, m, m, "ncName", NULL);
+		nc_dn = samdb_result_dn(sam_ctx, m, m, "nCName", NULL);
 		if (nc_dn == NULL) {
-			TALLOC_FREE(frame);
-			return NT_STATUS_INTERNAL_DB_CORRUPTION;
+			DEBUG(3, ("dsdb_trust_xref_forest_info: failed to found nCName for crossRef class object of domain %s\n", netbios));
+			continue;
 		}
 
 		status = dsdb_get_extended_dn_sid(nc_dn, &sid, "SID");

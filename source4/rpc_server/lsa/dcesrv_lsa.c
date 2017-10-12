@@ -4492,11 +4492,13 @@ static NTSTATUS dcesrv_lsa_lsaRSetForestTrustInformation(struct dcesrv_call_stat
 	status = dsdb_trust_xref_tdo_info(mem_ctx, p_state->sam_ldb,
 					  &xref_tdo);
 	if (!NT_STATUS_IS_OK(status)) {
+		DEBUG(4, ("dcesrv_lsa_lsaRSetForestTrustInformation: dsdb_trust_xref_tdo_info() failed: %s\n", nt_errstr(status)));
 		goto done;
 	}
 	status = dsdb_trust_xref_forest_info(mem_ctx, p_state->sam_ldb,
 					     &xref_lfti);
 	if (!NT_STATUS_IS_OK(status)) {
+		DEBUG(4, ("dcesrv_lsa_lsaRSetForestTrustInformation: dsdb_trust_xref_forest_info() failed: %s\n", nt_errstr(status)));
 		goto done;
 	}
 
