@@ -2848,6 +2848,7 @@ static krb5_error_code samba_kdc_fetch_client(krb5_context context,
 					      mem_ctx, principal, user_attrs, DSDB_SEARCH_UPDATE_MANAGED_PASSWORDS,
 					      &realm_dn, &msg);
 		if (ret != 0) {
+			DEBUG(5, ("samba_kdc_fetch_client: failed for samba_kdc_lookup_client()\n"));
 			return ret;
 		}
 
@@ -2856,12 +2857,15 @@ static krb5_error_code samba_kdc_fetch_client(krb5_context context,
 					      flags, kvno,
 					      realm_dn, msg, entry);
 		if (ret != 0) {
+			krb5_warnx(context, "samba_kdc_fetch_client: samba_kdc_message2entry() failed");
 			return ret;
 		}
 
 		if (!(flags & SDB_F_FOR_AS_REQ)) {
 			break;
 		}
+
+		DEBUG(5, ("samba_kdc_fetch_client: try to check for UF_SMARTCARD_REQUIRED\n"));
 
 		/* This is the check on UF_SMARTCARD_REQUIRED */
 		if (!(entry->flags.require_hwauth)) {
@@ -2879,6 +2883,8 @@ static krb5_error_code samba_kdc_fetch_client(krb5_context context,
 		if (entry->pw_end == NULL) {
 			break;
 		}
+
+		DEBUG(5, ("samba_kdc_fetch_client: continue check for UF_SMARTCARD_REQUIRED\n"));
 
 		/*
 		 * Find if the pwdLastSet has changed on an account
@@ -3328,6 +3334,7 @@ static krb5_error_code samba_kdc_fetch_server(krb5_context context,
 	ret = samba_kdc_lookup_server(context, kdc_db_ctx, mem_ctx, principal,
 				      flags, &realm_dn, &msg);
 	if (ret != 0) {
+		DEBUG(5, ("samba_kdc_fetch_server: failed for samba_kdc_lookup_server()\n"));
 		return ret;
 	}
 
@@ -3501,6 +3508,7 @@ static krb5_error_code samba_kdc_lookup_realm(krb5_context context,
 	status = dsdb_trust_routing_table_load(kdc_db_ctx->samdb,
 					       frame, &trt);
 	if (!NT_STATUS_IS_OK(status)) {
+		DEBUG(3, ("samba_kdc_lookup_realm: dsdb_trust_routing_table_load() failed: %s\n", nt_errstr(status)));
 		TALLOC_FREE(frame);
 		return EINVAL;
 	}
