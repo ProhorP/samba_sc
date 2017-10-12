@@ -417,9 +417,11 @@ static int extended_callback(struct ldb_request *req, struct ldb_reply *ares)
 
 			/* note that we don't fixup objectCategory as
 			   it should not be possible to move
-			   objectCategory elements in the schema */
+			   objectCategory elements in the schema,
+			   also we don't fixup explicitly requested attributes */
 			if (attribute->one_way_link &&
-			    strcasecmp(attribute->lDAPDisplayName, "objectCategory") != 0) {
+			    strcasecmp(attribute->lDAPDisplayName, "objectCategory") != 0 &&
+			    (!req->op.search.attrs || !ldb_attr_in_list(req->op.search.attrs, attribute->lDAPDisplayName))) {
 				bool remove_value;
 				ret = fix_one_way_link(ac, dn, is_deleted_objects, &remove_value,
 						       attribute->linkID);
