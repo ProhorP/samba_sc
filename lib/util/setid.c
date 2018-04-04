@@ -59,6 +59,11 @@ int samba_setgroups(size_t setlen, const gid_t *gidset);
 
 #endif
 
+/* missing SYS_setgroups32 leads to macro problems so define it by hand */
+#if (defined(__e2k__) && defined(__ptr64__))
+#define USE_LINUX_THREAD_CREDENTIALS 1
+#endif
+
 #if defined(HAVE_LINUX_THREAD_CREDENTIALS)
 #if defined(HAVE_SYSCALL_H)
 #include <syscall.h>
@@ -71,10 +76,19 @@ int samba_setgroups(size_t setlen, const gid_t *gidset);
 /* Ensure we can't compile in a mixed syscall setup. */
 #if !defined(USE_LINUX_32BIT_SYSCALLS)
 #if defined(SYS_setresuid32) || defined(SYS_setresgid32) || defined(SYS_setreuid32) || defined(SYS_setregid32) || defined(SYS_setuid32) || defined(SYS_setgid32) || defined(SYS_setgroups32)
+/* Just use 64-bit calls in e2k */
+#if !(defined(__e2k__) && defined(__ptr64__))
 #error Mixture of 32-bit Linux system calls and 64-bit calls.
 #endif
 #endif
+#endif
 
+#endif
+
+/* Kernels with version <3.14.27 have definition SYS_setgroups32, but we use 64-bit syscalls*/
+#if (defined(__e2k__) && defined(__ptr64__))
+#undef USE_LINUX_32BIT_SYSCALLS
+#define USE_LINUX_THREAD_CREDENTIALS 1
 #endif
 
 /* All the setXX[ug]id functions and setgroups Samba uses. */
