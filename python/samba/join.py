@@ -211,6 +211,10 @@ class DCJoinContext(object):
         # Do not normally register 127. addresses but allow override for selftest
         ctx.force_all_ips = False
 
+        if server is None:
+            # only domain naming master can create application directory partitions
+            ctx.reconnect_to_naming_master()
+
     def del_noerror(ctx, dn, recursive=False):
         if recursive:
             try:
@@ -343,6 +347,23 @@ class DCJoinContext(object):
             raise Exception("Account %s is not a domain member or a bare NT4 BDC, use 'samba-tool domain join' instead'" % ctx.samname)
 
         ctx.promote_from_dn = res[0].dn
+
+    def reconnect_to_naming_master(ctx):
+        # Forced local samdb used during the backup process when reconnecting to naming master is not available
+        if ctx.forced_local_samdb:
+            return
+
+        ctx.naming_master = ctx.get_naming_master()
+        if ctx.naming_master != ctx.server:
+            ctx.logger.info("Reconnecting to naming master %s" % ctx.naming_master)
+            ctx.server = ctx.naming_master
+            ctx.samdb = SamDB(url="ldap://%s" % ctx.server,
+                    session_info=system_session(),
+                    credentials=ctx.creds, lp=ctx.lp)
+            res = ctx.samdb.search(base="", scope=ldb.SCOPE_BASE, attrs=['dnsHostName'], controls=[])
+            ctx.server = res[0]["dnsHostName"][0]
+            ctx.logger.info("DNS name of new naming master is %s" % ctx.server)
+
 
     def find_dc(ctx, domain):
         """find a writeable DC for the given domain"""
