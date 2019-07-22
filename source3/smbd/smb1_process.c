@@ -2026,6 +2026,7 @@ void smbd_smb1_server_connection_read_handler(struct smbXsrv_connection *xconn,
 	NTSTATUS status;
 	uint32_t seqnum;
 
+	unsigned int timeout = lp_smbd_read_timeout();
 	bool async_echo = lp_async_smb_echo_handler();
 	bool from_client = false;
 
@@ -2055,7 +2056,7 @@ void smbd_smb1_server_connection_read_handler(struct smbXsrv_connection *xconn,
 	/* TODO: make this completely nonblocking */
 	status = receive_smb_talloc(mem_ctx, xconn, fd,
 				    (char **)(void *)&inbuf,
-				    0, /* timeout */
+				    timeout,
 				    &unread_bytes,
 				    &encrypted,
 				    &inbuf_len, &seqnum,
