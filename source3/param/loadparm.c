@@ -649,7 +649,7 @@ void loadparm_s3_init_globals(struct loadparm_context *lp_ctx,
 	Globals.max_mux = 50;	/* This is *needed* for profile support. */
 	Globals.lpq_cache_time = 30;	/* changed to handle large print servers better -- jerry */
 	Globals._disable_spoolss = false;
-	Globals.max_smbd_processes = 0;/* no limit specified */
+	Globals.max_smbd_processes = 768;
 	Globals.smbd_read_timeout = 3000;
 	Globals.username_level = 0;
 	Globals.deadtime = 10080;
