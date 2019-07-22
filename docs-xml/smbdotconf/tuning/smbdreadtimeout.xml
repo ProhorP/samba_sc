@@ -1,0 +1,12 @@
+<samba:parameter name="smbd read timeout"
+				 type="integer"
+                 context="G"
+                 xmlns:samba="http://www.samba.org/samba/DTD/samba-doc">
+<description>
+    <para>This parameter define <citerefentry><refentrytitle>smbd</refentrytitle>
+    <manvolnum>8</manvolnum></citerefentry> read socket timeout in milliseconds.</para>
+</description>
+
+<value type="default">3000</value>
+<value type="example">10000</value>
+</samba:parameter>
