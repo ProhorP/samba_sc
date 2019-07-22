@@ -19,6 +19,6 @@
 
 </description>
 
-<value type="default">0</value>
+<value type="default">768</value>
 <value type="example">1000</value>
 </samba:parameter>
