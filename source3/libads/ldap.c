@@ -2616,7 +2616,7 @@ ADS_STATUS ads_create_machine_acct(ADS_STRUCT *ads,
 
 	/* Check if the machine account already exists. */
 	ret = ads_find_machine_acct(ads, &res, machine_escaped);
-	if (ADS_ERR_OK(ret)) {
+	if (ADS_ERR_OK(ret) && ads_count_replies(ads, res) > 0) {
 		/* Change the machine account password */
 		ret = ads_change_machine_acct(ads, res, &machine_pw_val);
 		ads_msgfree(ads, res);
