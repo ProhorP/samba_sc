@@ -230,7 +230,7 @@ _PUBLIC_ bool directory_create_or_exist(const char *dname,
 	if (ret != 0 && errno == EEXIST) {
 		struct stat sbuf;
 
-		ret = lstat(dname, &sbuf);
+		ret = stat(dname, &sbuf);
 		if (ret != 0) {
 			return false;
 		}
