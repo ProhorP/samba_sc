@@ -26,6 +26,7 @@ bld.INSTALL_FILES(bld.env.PERL_LIB_INSTALL_DIR,
                   Parse/Pidl/Typelist.pm
                   Parse/Pidl/Samba3/ClientNDR.pm
                   Parse/Pidl/Samba3/ServerNDR.pm
+                  Parse/Pidl/Samba3/Template.pm
                   Parse/Pidl/Compat.pm
                   Parse/Pidl/NDR.pm
                   ''',
