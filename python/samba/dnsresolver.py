@@ -64,5 +64,5 @@ class DNSResolver(dns.resolver.Resolver):
             dns.reversename.from_address(ip_address),
             rdtype=dns.rdatatype.PTR,
             *args,
-            **kwargs,
+            **kwargs
         )
