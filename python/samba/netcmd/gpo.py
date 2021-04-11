@@ -1864,7 +1864,7 @@ class cmd_admxload(Command):
         Option("-H", "--URL", help="LDB URL for database or target server", type=str,
                 metavar="URL", dest="H"),
         Option("--admx-dir", help="Directory where admx templates are stored",
-                type=str, default=os.path.join(param.data_dir(), 'samba/admx'))
+                type=str, default=os.path.join(param.data_dir(), 'PolicyDefinitions'))
     ]
 
     def run(self, H=None, sambaopts=None, credopts=None, versionopts=None,
