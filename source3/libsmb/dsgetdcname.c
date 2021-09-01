@@ -616,6 +616,8 @@ static NTSTATUS discover_dc_dns(TALLOC_CTX *mem_ctx,
 		 * Too complex to maintain :-(.
 		 */
 		for (j = 0; j < dcs[i].num_ips; j++) {
+			if (&dcs[i].ss_s[j] == NULL)
+				continue;
 			if ((dcs[i].ss_s[j].ss_family == AF_INET && !have_v4_addr) ||
 			    (dcs[i].ss_s[j].ss_family == AF_INET6 && !have_v6_addr)) {
 				bool ok;
