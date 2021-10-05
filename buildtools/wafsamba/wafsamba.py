@@ -1023,6 +1023,8 @@ def copy_and_fix_python_path(task):
         replacement = ""
     elif task.env["PYTHONARCHDIR"] == task.env["PYTHONDIR"]:
         replacement="""sys.path.insert(0, "%s")""" % task.env["PYTHONDIR"]
+    elif task.env["PYTHONDIR"] in sys.path:
+        replacement="""sys.path.insert(0, "%s")""" % task.env["PYTHONARCHDIR"]
     else:
         replacement="""sys.path.insert(0, "%s")
 sys.path.insert(1, "%s")""" % (task.env["PYTHONARCHDIR"], task.env["PYTHONDIR"])
