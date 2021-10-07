@@ -2,6 +2,7 @@
 
 bld.INSTALL_FILES('${DATADIR}/PolicyDefinitions', ['samba.admx',
                                             'en-US/samba.adml',
+                                            'ru-RU/samba.adml',
                                             'GNOME_Settings.admx',
                                             'en-US/GNOME_Settings.adml',
                                             'ru-RU/GNOME_Settings.adml'
