@@ -3148,7 +3148,7 @@ struct loadparm_context *loadparm_init(TALLOC_CTX *mem_ctx)
 
 	lpcfg_do_global_parameter(lp_ctx,
 				  "min domain uid",
-				  "1000");
+				  "500");
 
 	lpcfg_do_global_parameter(lp_ctx,
 				  "rpc start on demand helpers",
