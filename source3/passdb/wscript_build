@@ -19,7 +19,7 @@ bld.SAMBA3_MODULE('pdb_ldapsam',
 bld.SAMBA3_MODULE('pdb_smbpasswd',
                  subsystem='pdb',
                  source='pdb_smbpasswd.c',
-                 deps='samba-util',
+                 deps='samba-util samba3-util samba-debug secrets3 samba-security replace',
                  init_function='',
                  internal_module=bld.SAMBA3_IS_STATIC_MODULE('pdb_smbpasswd'),
                  enabled=bld.SAMBA3_IS_ENABLED_MODULE('pdb_smbpasswd'))
