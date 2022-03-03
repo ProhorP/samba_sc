@@ -118,7 +118,7 @@ else:
 if bld.CONFIG_SET('HAVE_KRB5_LOCATE_PLUGIN_H'):
     bld.SAMBA_PLUGIN('winbind_krb5_locator',
                      source='krb5_plugin/winbind_krb5_locator.c',
-                     deps='wbclient krb5 com_err',
+                     deps='wbclient krb5 com_err replace',
                      require_builtin_deps=winbind_krb5_require_builtin_deps,
                      realname='winbind_krb5_locator.so',
                      install_path='${MODULESDIR}/krb5')
@@ -163,7 +163,7 @@ if bld.CONFIG_SET('HAVE_KRB5_LOCATE_PLUGIN_H'):
 if bld.CONFIG_SET('HAVE_KRB5_LOCALAUTH_PLUGIN_H'):
     bld.SAMBA_PLUGIN('winbind_krb5_localauth',
                      source='krb5_plugin/winbind_krb5_localauth.c',
-                     deps='wbclient krb5 com_err',
+                     deps='wbclient krb5 com_err replace',
                      require_builtin_deps=winbind_krb5_require_builtin_deps,
                      realname='winbind_krb5_localauth.so',
                      install_path='${MODULESDIR}/krb5')
