@@ -480,7 +480,7 @@ bld.SAMBA3_LIBRARY('secrets3',
 
 bld.SAMBA3_LIBRARY('smbldap',
                     source='lib/smbldap.c',
-                    deps='ldap lber samba-util smbconf',
+                    deps='ldap lber samba-util smbconf samba-security smbd_shim samba-debug replace',
                     enabled=bld.CONFIG_SET("HAVE_LDAP"),
                     private_library=False,
                     abi_directory='lib/ABI',

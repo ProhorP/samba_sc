@@ -243,7 +243,7 @@ else:
 
     bld.SAMBA_LIBRARY('samba-modules',
                       source='modules.c',
-                      deps='samba-errors samba-util',
+                      deps='samba-errors samba-util samba-debug',
                       local_include=False,
                       private_library=True)
 
