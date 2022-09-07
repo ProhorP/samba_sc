@@ -1,0 +1,10 @@
+<samba:parameter name="ignore requester sid"
+                 type="boolean"
+                 context="G"
+                 xmlns:samba="http://www.samba.org/samba/DTD/samba-doc">
+<description>
+    <para>If <constant>yes</constant> KDC ignores the REQUESTER_SID field in the PAC.
+    It is used for the correct operation of trust relationships with oldest versions of MS AD.</para>
+</description>
+<value type="default">no</value>
+</samba:parameter>
