@@ -2982,6 +2982,8 @@ struct loadparm_context *loadparm_init(TALLOC_CTX *mem_ctx)
 
 	lpcfg_do_global_parameter(lp_ctx, "create krb5 conf", "yes");
 
+	lpcfg_do_global_parameter(lp_ctx, "ignore requester sid", "no");
+
 	lpcfg_do_global_parameter(lp_ctx, "winbind max clients", "200");
 
 	lpcfg_do_global_parameter(lp_ctx, "acl map full control", "yes");

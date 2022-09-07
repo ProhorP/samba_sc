@@ -673,6 +673,23 @@ bool samba_princ_needs_pac(const struct samba_kdc_entry *skdc_entry)
 	return true;
 }
 
+static
+bool samba_ignore_requester_sid(struct samba_kdc_entry *skdc_entry)
+{
+	struct loadparm_context *lp_ctx;
+	bool ignore_requester_sid;
+
+	if (skdc_entry == NULL) {
+		DBG_ERR("Ignore requester sid option reading failed\n");
+		return false;
+	}
+
+	lp_ctx = skdc_entry->kdc_db_ctx->lp_ctx;
+	ignore_requester_sid = lpcfg_ignore_requester_sid(lp_ctx);
+
+	return ignore_requester_sid;
+}
+
 static krb5_error_code samba_client_requested_pac(krb5_context context,
 						  const krb5_const_pac pac,
 						  TALLOC_CTX *mem_ctx,
@@ -2390,6 +2407,10 @@ krb5_error_code samba_kdc_verify_pac(TALLOC_CTX *mem_ctx,
 	if (!(flags & SAMBA_KDC_FLAG_CONSTRAINED_DELEGATION)) {
 		code = pac_blobs_ensure_exists(pac_blobs,
 					       PAC_TYPE_REQUESTER_SID);
+		if (code != 0 && samba_ignore_requester_sid(krbtgt)) {
+			code = 0;
+			DBG_WARNING("Requester sid missing verify ignoring\n");
+		}
 		if (code != 0) {
 			code = KRB5KDC_ERR_TGT_REVOKED;
 			goto done;
