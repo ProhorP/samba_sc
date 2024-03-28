@@ -3153,6 +3153,10 @@ struct loadparm_context *loadparm_init(TALLOC_CTX *mem_ctx)
 				  "default");
 
 	lpcfg_do_global_parameter(lp_ctx,
+				  "client force dns canonicalize hostname",
+				  "no");
+
+	lpcfg_do_global_parameter(lp_ctx,
 				  "smbd max xattr size",
 				  "65536");
 
