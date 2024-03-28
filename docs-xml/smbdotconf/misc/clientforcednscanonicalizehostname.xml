@@ -1,0 +1,9 @@
+<samba:parameter name="client force dns canonicalize hostname"
+                 type="boolean"
+                 context="G"
+                 xmlns:samba="http://www.samba.org/samba/DTD/samba-doc">
+<description>
+    <para>If <constant>yes</constant> client library tries to resolve canonical name.</para>
+</description>
+<value type="default">no</value>
+</samba:parameter>
