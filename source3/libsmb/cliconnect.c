@@ -2647,6 +2647,7 @@ struct cli_connect_nb_state {
 };
 
 static void cli_connect_nb_done(struct tevent_req *subreq);
+static const char *cli_canonicalize_host(TALLOC_CTX *ctx, const char *host);
 
 static struct tevent_req *cli_connect_nb_send(
 	TALLOC_CTX *mem_ctx, struct tevent_context *ev,
@@ -2656,6 +2657,7 @@ static struct tevent_req *cli_connect_nb_send(
 {
 	struct tevent_req *req, *subreq;
 	struct cli_connect_nb_state *state;
+	struct loadparm_context *lp_ctx = NULL;
 
 	req = tevent_req_create(mem_ctx, &state, struct cli_connect_nb_state);
 	if (req == NULL) {
@@ -2675,7 +2677,12 @@ static struct tevent_req *cli_connect_nb_send(
 			}
 		}
 
-		state->desthost = host;
+		lp_ctx = loadparm_init_s3(mem_ctx, loadparm_s3_helpers());
+		if (lp_ctx != NULL && lpcfg_client_force_dns_canonicalize_hostname(lp_ctx)) {
+			state->desthost = cli_canonicalize_host(mem_ctx, host);
+		} else {
+			state->desthost = host;
+		}
 	} else if (dest_ss != NULL) {
 		state->desthost = print_canonical_sockaddr(state, dest_ss);
 		if (tevent_req_nomem(state->desthost, req)) {
@@ -4023,4 +4030,32 @@ struct cli_state *get_ipc_connect_master_ip(TALLOC_CTX *ctx,
 	cli = get_ipc_connect(addr, &server_ss, creds);
 
 	return cli;
+}
+
+static const char *cli_canonicalize_host(TALLOC_CTX *ctx, const char *host)
+{
+	int ret = -1;
+	const char *canon_host;
+	struct addrinfo hints;
+	struct addrinfo *ailist = NULL;
+
+	hints.ai_flags = AI_CANONNAME;
+
+	ret = getaddrinfo(host,
+			NULL,
+			&hints,
+			&ailist);
+
+	if (ret) {
+		DEBUG(3,("cli_canonicalize_host: getaddrinfo failed for name %s [%s]\n",
+			host,
+			gai_strerror(ret) ));
+		return host;
+	}
+
+	canon_host = talloc_strdup(ctx, ailist->ai_canonname);
+	freeaddrinfo(ailist);
+
+	return canon_host;
+
 }
