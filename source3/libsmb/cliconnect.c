@@ -4039,6 +4039,7 @@ static const char *cli_canonicalize_host(TALLOC_CTX *ctx, const char *host)
 	struct addrinfo hints;
 	struct addrinfo *ailist = NULL;
 
+	memset(&hints, 0, sizeof(hints));
 	hints.ai_flags = AI_CANONNAME;
 
 	ret = getaddrinfo(host,
