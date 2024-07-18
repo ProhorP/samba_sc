@@ -2954,6 +2954,8 @@ struct loadparm_context *loadparm_init(TALLOC_CTX *mem_ctx)
 
 	lpcfg_do_global_parameter(lp_ctx, "idmap negative cache time", "120");
 
+	lpcfg_do_global_parameter(lp_ctx, "idmap reverse cache update", "no");
+
 	lpcfg_do_global_parameter(lp_ctx, "ldap follow referral", "auto");
 
 	lpcfg_do_global_parameter(lp_ctx, "multicast dns register", "yes");
