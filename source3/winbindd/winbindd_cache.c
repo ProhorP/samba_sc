@@ -988,7 +988,7 @@ static void wcache_save_sid_to_name(struct winbindd_domain *domain, NTSTATUS sta
 		DBG_DEBUG("namemap_cache_set_sid2name failed\n");
 	}
 
-	if (type != SID_NAME_UNKNOWN) {
+	if (type != SID_NAME_UNKNOWN && lp_idmap_reverse_cache_update()) {
 		ok = namemap_cache_set_name2sid(
 			domain_name, name, sid, type,
 			time(NULL) + lp_winbind_cache_time());
