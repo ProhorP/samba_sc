@@ -1,0 +1,14 @@
+<samba:parameter name="idmap reverse cache update"
+                 context="G"
+                 type="boolean"
+                 xmlns:samba="http://www.samba.org/samba/DTD/samba-doc">
+<description>
+	<para>This parameter specifies the reverse name to sid cache behaviour
+	that Winbind's idmap interface additionally saved to namemap cache, when
+	found unknown sid during sid to name query.
+	By default, this behaviour is disabled.
+	</para>
+</description>
+
+<value type="default">no</value>
+</samba:parameter>
