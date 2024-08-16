@@ -240,11 +240,6 @@ class dnsobj(object):
 
 def parse_dns_line(line, sub_vars):
     """parse a DNS line from."""
-    if line.startswith("SRV _ldap._tcp.pdc._msdcs.") and not samdb.am_pdc():
-        # We keep this as compat to the dns_update_list of 4.0/4.1
-        if opts.verbose:
-            print("Skipping PDC entry (%s) as we are not a PDC" % line)
-        return None
     subline = samba.substitute_var(line, sub_vars)
     if subline == '' or subline[0] == "#":
         return None
