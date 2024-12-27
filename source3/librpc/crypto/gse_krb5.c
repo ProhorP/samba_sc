@@ -559,6 +559,8 @@ krb5_error_code gse_krb5_get_server_keytab(krb5_context krbctx,
 	krb5_error_code ret = 0;
 	krb5_error_code ret1 = 0;
 	krb5_error_code ret2 = 0;
+	uid_t euid;
+	bool root_mode;
 
 	*keytab = NULL;
 
@@ -568,6 +570,12 @@ krb5_error_code gse_krb5_get_server_keytab(krb5_context krbctx,
 		DEBUG(1, (__location__ ": Failed to get memory "
 			  "keytab!\n"));
 		return ret;
+	}
+
+	euid = geteuid();
+	root_mode = !non_root_mode();
+	if (root_mode && euid != (uid_t)0) {
+		gain_root_privilege();
 	}
 
 	switch (lp_kerberos_method()) {
@@ -600,6 +608,10 @@ krb5_error_code gse_krb5_get_server_keytab(krb5_context krbctx,
 			ret = ret1;
 		}
 		break;
+	}
+
+	if (root_mode && euid != (uid_t)0) {
+		set_effective_uid(euid);
 	}
 
 	if (ret) {
