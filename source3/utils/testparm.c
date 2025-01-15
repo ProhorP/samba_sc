@@ -641,7 +641,7 @@ static int do_global_checks(void)
 
 	if (lp_server_role() != ROLE_STANDALONE) {
 		const char *default_backends[] = {
-			"tdb", "tdb2", "ldap", "autorid", "hash"
+			"tdb", "tdb2", "ldap", "autorid", "hash", "sss"
 		};
 		const char *idmap_backend;
 		bool valid_backend = false;
