@@ -919,7 +919,24 @@ static void samba_wdc_plugin_fini(void *ptr)
 static krb5_error_code samba_wdc_referral_policy(void *priv,
 						 astgs_request_t r)
 {
-	return kdc_request_get_error_code((kdc_request_t)r);
+	krb5_context context;
+	krb5_const_realm realm;
+	const char *hostname;
+	bool is_krbtgt;
+	krb5_error_code ret = kdc_request_get_error_code((kdc_request_t)r);
+
+	if (ret == SDB_ERR_NOENTRY) {
+		context = kdc_request_get_context((kdc_request_t)r);
+		krb5_const_principal server_princ = kdc_request_get_server_princ(r);
+		is_krbtgt = krb5_principal_is_krbtgt(context, server_princ);
+		if (is_krbtgt) {
+			hostname = krb5_principal_get_comp_string(context, server_princ, 1);
+			realm = krb5_principal_get_realm(context, server_princ);
+			if (strcmp(hostname, realm) != 0)
+				ret = KRB5_PLUGIN_NO_HANDLE;
+		}
+	}
+	return ret;
 }
 
 struct krb5plugin_kdc_ftable kdc_plugin_table = {
