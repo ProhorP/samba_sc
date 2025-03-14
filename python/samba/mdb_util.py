@@ -37,7 +37,7 @@ def mdb_copy(file1, file2):
         raise CommandError("mdb_copy not found. "
                            "You may need to install the lmdb-utils package")
 
-    mdb_copy_cmd = [toolpath, "-n", file1, "%s.copy.mdb" % file1]
+    mdb_copy_cmd = [toolpath, "-n", "-c", file1, "%s.copy.mdb" % file1]
     status = subprocess.check_call(mdb_copy_cmd, close_fds=True, shell=False)
 
     os.rename("%s.copy.mdb" % file1, file2)
