@@ -177,6 +177,17 @@ NTSTATUS compute_seed_key(TALLOC_CTX *mem_ctx,
 			  const struct Gkid gkid,
 			  uint8_t out[static const GKDI_KEY_LEN]);
 
+NTSTATUS compute_group_private_key(TALLOC_CTX *mem_ctx,
+				   const struct ProvRootKey *const root_key,
+				   uint8_t seed_key[static const GKDI_KEY_LEN],
+				   DATA_BLOB *key_out);
+
+NTSTATUS compute_group_public_key(TALLOC_CTX *mem_ctx,
+				  const struct ProvRootKey *const root_key,
+				  uint8_t seed_key[static const GKDI_KEY_LEN],
+				  const struct Gkid gkid,
+				  DATA_BLOB *group_public_key_out);
+
 NTSTATUS kdf_sp_800_108_from_params(
 	const DATA_BLOB *const kdf_param,
 	struct KdfAlgorithm *const kdf_algorithm_out);
