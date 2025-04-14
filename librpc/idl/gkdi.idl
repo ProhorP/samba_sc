@@ -104,6 +104,21 @@ interface gkdi
 		uint8 generator[key_length];
 	} FfcDhParameters;
 
+        typedef [public] struct {
+            [value(0x42504844), range(0x42504844, 0x42504844)] uint32 magic; /* 'DHPB' */
+            uint32 key_length;
+            uint8 field_order[key_length];
+            uint8 generator[key_length];
+            uint8 public_key[key_length];
+        } FfcDhKey;
+
+        typedef [public] struct {
+            [range(0x45434B31, 0x45434B35)] uint32 magic; /* 'ECK1', 'ECK3', 'ECK5' */
+            uint32 key_length;
+            uint8 x[key_length];
+            uint8 y[key_length];
+        } ECDHKey;
+
 	typedef [public] struct {
 		GUID guid;
 		int32 l0_idx;
