@@ -187,6 +187,22 @@ bld.SAMBA_MODULE('dcerpc_eventlog',
                  deps='DCERPC_COMMON'
                  )
 
+bld.SAMBA_MODULE('dcerpc_gkdi',
+                 source='gkdi/dcesrv_gkdi.c',
+                 autoproto='gkdi/proto.h',
+                 subsystem='dcerpc_server',
+                 init_function='dcerpc_server_gkdi_init',
+                 deps='''
+                      samdb
+                      DCERPC_COMMON
+                      NDR_GKDI
+                      RPC_NDR_GKDI
+                      gkdi
+                      gnutls
+                      GNUTLS_HELPERS
+                      '''
+                 )
+
 bld.SAMBA_MODULE('dcerpc_dnsserver',
                  source='''
                         dnsserver/dcerpc_dnsserver.c
