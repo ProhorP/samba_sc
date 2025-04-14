@@ -889,7 +889,11 @@ void loadparm_s3_init_globals(struct loadparm_context *lp_ctx,
 
 	Globals.server_services = str_list_make_v3_const(NULL, "s3fs rpc nbt wrepl ldap cldap kdc drepl winbindd ntp_signd kcc dnsupdate dns", NULL);
 
-	Globals.dcerpc_endpoint_servers = str_list_make_v3_const(NULL, "epmapper wkssvc samr netlogon lsarpc drsuapi dssetup unixinfo browser eventlog6 backupkey dnsserver", NULL);
+	Globals.dcerpc_endpoint_servers = str_list_make_v3_const(
+		NULL,
+		"epmapper wkssvc samr netlogon lsarpc drsuapi dssetup unixinfo "
+		"browser eventlog6 backupkey dnsserver gkdi",
+		NULL);
 
 	Globals.tls_enabled = true;
 	Globals.tls_verify_peer = TLS_VERIFY_PEER_AS_STRICT_AS_POSSIBLE;
