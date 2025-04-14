@@ -19,6 +19,7 @@
 */
 
 #include "includes.h"
+#include <gnutls/abstract.h>
 #include <gnutls/gnutls.h>
 #include <gnutls/crypto.h>
 
@@ -128,15 +129,19 @@ out:
 	return key_env_ret;
 }
 
-NTSTATUS ProvRootKey(TALLOC_CTX *mem_ctx,
-		     const struct GUID root_key_id,
-		     const int32_t version,
-		     const DATA_BLOB root_key_data,
-		     const NTTIME create_time,
-		     const NTTIME use_start_time,
-		     const char *const domain_id,
-		     const struct KdfAlgorithm kdf_algorithm,
-		     const struct ProvRootKey **const root_key_out)
+NTSTATUS ProvRootKey(
+	TALLOC_CTX *mem_ctx,
+	const struct GUID root_key_id,
+	const int32_t version,
+	const DATA_BLOB root_key_data,
+	const NTTIME create_time,
+	const NTTIME use_start_time,
+	const char *const domain_id,
+	const struct KdfAlgorithm kdf_algorithm,
+	const struct SecretAgreementAlgorithm secret_agreement_algorithm,
+	const uint64_t public_key_length,
+	const uint64_t private_key_length,
+	const struct ProvRootKey **const root_key_out)
 {
 	NTSTATUS status = NT_STATUS_OK;
 	struct ProvRootKey *root_key = NULL;
@@ -159,6 +164,14 @@ NTSTATUS ProvRootKey(TALLOC_CTX *mem_ctx,
 		.use_start_time = use_start_time,
 		.domain_id = talloc_steal(root_key, domain_id),
 		.kdf_algorithm = kdf_algorithm,
+		.secret_agreement_algorithm =
+			{.param.dh_parameters = talloc_steal(
+				 root_key,
+				 secret_agreement_algorithm.param
+					 .dh_parameters),
+			 .id = secret_agreement_algorithm.id},
+		.public_key_length = public_key_length,
+		.private_key_length = private_key_length,
 		.version = version,
 	};
 
@@ -692,4 +705,67 @@ NTSTATUS kdf_algorithm_from_params(const char *const kdf_algorithm_id,
 
 	/* Unknown algorithm. */
 	return NT_STATUS_NOT_SUPPORTED;
+}
+
+NTSTATUS secret_agreement_algorithm_from_params(
+	const char *const algorithm_id,
+	const DATA_BLOB *const secret_agreement_algorithm_params,
+	struct SecretAgreementAlgorithm *const secret_agreement_algorithm_out)
+{
+	TALLOC_CTX *tmp_ctx = NULL;
+	NTSTATUS status = NT_STATUS_OK;
+	enum ndr_err_code err;
+	struct FfcDhParameters *ffc_dh_params = NULL;
+	enum SecretAgreementAlgorithmID id = SECRET_AGREEMENT_ALGORITHM_DH;
+
+	if (secret_agreement_algorithm_params != NULL) {
+		tmp_ctx = talloc_new(NULL);
+		if (tmp_ctx == NULL) {
+			status = NT_STATUS_NO_MEMORY;
+			goto out;
+		}
+
+		if (strcmp(algorithm_id, "DH") == 0) {
+			ffc_dh_params = talloc(tmp_ctx, struct FfcDhParameters);
+			if (ffc_dh_params == NULL) {
+				status = NT_STATUS_NO_MEMORY;
+				goto out;
+			}
+
+			err = ndr_pull_struct_blob(
+				secret_agreement_algorithm_params,
+				tmp_ctx,
+				ffc_dh_params,
+				(ndr_pull_flags_fn_t)ndr_pull_FfcDhParameters);
+			if (!NDR_ERR_CODE_IS_SUCCESS(err)) {
+				status = ndr_map_error2ntstatus(err);
+				DBG_WARNING("FfcDhParameters pull failed: %s\n",
+					    nt_errstr(status));
+				goto out;
+			}
+		} else if (strcmp(algorithm_id, "ECDH_P256") == 0) {
+			id = SECRET_AGREEMENT_ALGORITHM_ECDH_P256;
+		} else if (strcmp(algorithm_id, "ECDH_P384") == 0) {
+			id = SECRET_AGREEMENT_ALGORITHM_ECDH_P384;
+		} else if (strcmp(algorithm_id, "ECDH_P521") == 0) {
+			id = SECRET_AGREEMENT_ALGORITHM_ECDH_P521;
+		} else {
+			DBG_WARNING(
+				"Unsupported secrete agrement algorithm %s\n",
+				algorithm_id);
+			status = NT_STATUS_NOT_SUPPORTED;
+			goto out;
+		}
+
+		*secret_agreement_algorithm_out =
+			(struct SecretAgreementAlgorithm){
+				.id = SECRET_AGREEMENT_ALGORITHM_DH,
+				.param.dh_parameters = talloc_steal(
+					secret_agreement_algorithm_out,
+					ffc_dh_params),
+			};
+	}
+out:
+	talloc_free(tmp_ctx);
+	return status;
 }
