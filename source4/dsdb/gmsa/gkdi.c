@@ -42,6 +42,21 @@ NTSTATUS gkdi_root_key_from_msg(TALLOC_CTX *mem_ctx,
 	NTSTATUS status = NT_STATUS_OK;
 	struct ldb_val root_key_data = {};
 	struct KdfAlgorithm kdf_algorithm = {};
+	struct SecretAgreementAlgorithm *secret_agreement_algorithm = NULL;
+	TALLOC_CTX *tmp_ctx = NULL;
+
+	tmp_ctx = talloc_new(mem_ctx);
+	if (tmp_ctx == NULL) {
+		status = NT_STATUS_NO_MEMORY;
+		goto out;
+	}
+
+	secret_agreement_algorithm = talloc_zero(
+		tmp_ctx, struct SecretAgreementAlgorithm);
+	if (!secret_agreement_algorithm) {
+		status = NT_STATUS_NO_MEMORY;
+		goto out;
+	}
 
 	const int version = ldb_msg_find_attr_as_int(msg, "msKds-Version", 0);
 	const NTTIME create_time = samdb_result_nttime(msg,
@@ -75,6 +90,26 @@ NTSTATUS gkdi_root_key_from_msg(TALLOC_CTX *mem_ctx,
 		}
 	}
 
+	{
+		const char *algorithm_id = ldb_msg_find_attr_as_string(
+			msg, "msKds-SecretAgreementAlgorithmID", NULL);
+		const struct ldb_val *secret_agreement_param_val =
+			ldb_msg_find_ldb_val(msg, "msKds-SecretAgreementParam");
+		status = secret_agreement_algorithm_from_params(
+			algorithm_id,
+			secret_agreement_param_val,
+			secret_agreement_algorithm);
+		if (!NT_STATUS_IS_OK(status)) {
+			goto out;
+		}
+	}
+
+	uint64_t public_key_length = ldb_msg_find_attr_as_uint64(
+		msg, "msKds-PublicKeyLength", 2048);
+
+	uint64_t private_key_length = ldb_msg_find_attr_as_uint64(
+		msg, "msKds-PrivateKeyLength", 256);
+
 	status = ProvRootKey(mem_ctx,
 			     root_key_id,
 			     version,
@@ -83,12 +118,16 @@ NTSTATUS gkdi_root_key_from_msg(TALLOC_CTX *mem_ctx,
 			     use_start_time,
 			     domain_id,
 			     kdf_algorithm,
+			     *secret_agreement_algorithm,
+			     public_key_length,
+			     private_key_length,
 			     root_key_out);
 	if (!NT_STATUS_IS_OK(status)) {
 		goto out;
 	}
 
 out:
+	talloc_free(tmp_ctx);
 	return status;
 }
 
@@ -503,21 +542,16 @@ out:
 	return ret;
 }
 
-/*
- * The PrivateKey, PublicKey, and SecretAgreement attributes are related to the
- * public‐key functionality in GKDI. Samba doesn’t try to implement any of that,
- * so we don’t bother looking at these attributes.
- */
 static const char *const root_key_attrs[] = {
 	"msKds-CreateTime",
 	"msKds-DomainID",
 	"msKds-KDFAlgorithmID",
 	"msKds-KDFParam",
-	/* "msKds-PrivateKeyLength", */
-	/* "msKds-PublicKeyLength", */
+	"msKds-PrivateKeyLength",
+	"msKds-PublicKeyLength",
 	"msKds-RootKeyData",
-	/* "msKds-SecretAgreementAlgorithmID", */
-	/* "msKds-SecretAgreementParam", */
+	"msKds-SecretAgreementAlgorithmID",
+	"msKds-SecretAgreementParam",
 	"msKds-UseStartTime",
 	"msKds-Version",
 	NULL,
