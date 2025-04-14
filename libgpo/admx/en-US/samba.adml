@@ -1589,7 +1589,7 @@ Example: 100000</string>
       <string id="POL_4A36DCFC_E9DB_5CD6_A67B_F94F3D95224F_Help">This option controls whether DCERPC services are allowed to be used with DCERPC_AUTH_LEVEL_CONNECT, which provides authentication, but no per message integrity nor privacy protection.
  Some interfaces like samr, lsarpc and netlogon have a hard-coded default of no and epmapper, mgmt and rpcecho have a hard-coded default of yes.
  The behavior can be overwritten per interface name (e.g. lsarpc, netlogon, samr, srvsvc, winreg, wkssvc ...) by using 'allow dcerpc auth level connect:interface = yes' as option.
- This option yields precedence to the implementation specific restrictions. E.g. the drsuapi and backupkey protocols require DCERPC_AUTH_LEVEL_PRIVACY. The dnsserver protocol requires DCERPC_AUTH_LEVEL_INTEGRITY.
+ This option yields precedence to the implementation specific restrictions. E.g. the drsuapi, gkdi and backupkey protocols require DCERPC_AUTH_LEVEL_PRIVACY. The dnsserver protocol requires DCERPC_AUTH_LEVEL_INTEGRITY.
 
 Example: yes</string>
       <string id="POL_F3A8A539_E774_5498_B8B7_5D295841A159">allow trusted domains</string>
@@ -4015,7 +4015,7 @@ General rule structure:
       <presentation id="POL_F0990CDC_21DF_538D_9282_2749E00AF99E">
         <textBox refId="TXT_E8C89EE3_FF60_5216_A5C7_803A3AA8D790">
           <label>dcerpc endpoint servers</label>
-          <defaultValue>epmapper, wkssvc, rpcecho, samr, netlogon, lsarpc, drsuapi, dssetup, unixinfo, browser, eventlog6, backupkey, dnsserver</defaultValue>
+          <defaultValue>epmapper, wkssvc, rpcecho, samr, netlogon, lsarpc, drsuapi, dssetup, unixinfo, browser, eventlog6, backupkey, dnsserver, gkdi</defaultValue>
         </textBox>
       </presentation>
       <presentation id="POL_BD3F8921_7AF6_57F8_894A_9C73D40C6202">
