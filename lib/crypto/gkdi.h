@@ -57,6 +57,22 @@ enum {
 	root_key_version_1 = 1,
 };
 
+enum SecretAgreementAlgorithmID {
+	SECRET_AGREEMENT_ALGORITHM_DH,
+	SECRET_AGREEMENT_ALGORITHM_ECDH_P256,
+	SECRET_AGREEMENT_ALGORITHM_ECDH_P384,
+	SECRET_AGREEMENT_ALGORITHM_ECDH_P521,
+};
+
+typedef struct FfcDhParameters FfcDhParameters;
+
+struct SecretAgreementAlgorithm {
+	union {
+		struct FfcDhParameters *dh_parameters;
+	} param;
+	enum SecretAgreementAlgorithmID id;
+};
+
 struct ProvRootKey {
 	struct GUID id;
 	DATA_BLOB data;
@@ -64,18 +80,25 @@ struct ProvRootKey {
 	NTTIME use_start_time;
 	const char *domain_id;
 	struct KdfAlgorithm kdf_algorithm;
+	struct SecretAgreementAlgorithm secret_agreement_algorithm;
+	uint64_t public_key_length;
+	uint64_t private_key_length;
 	int32_t version;
 };
 
-NTSTATUS ProvRootKey(TALLOC_CTX *mem_ctx,
-		     const struct GUID root_key_id,
-		     const int32_t version,
-		     const DATA_BLOB root_key_data,
-		     const NTTIME create_time,
-		     const NTTIME use_start_time,
-		     const char *const domain_id,
-		     const struct KdfAlgorithm kdf_algorithm,
-		     const struct ProvRootKey **const root_key_out);
+NTSTATUS ProvRootKey(
+	TALLOC_CTX *mem_ctx,
+	const struct GUID root_key_id,
+	const int32_t version,
+	const DATA_BLOB root_key_data,
+	const NTTIME create_time,
+	const NTTIME use_start_time,
+	const char *const domain_id,
+	const struct KdfAlgorithm kdf_algorithm,
+	const struct SecretAgreementAlgorithm secret_agreement_algorithm,
+	const uint64_t public_key_length,
+	const uint64_t private_key_length,
+	const struct ProvRootKey **const root_key_out);
 
 struct Gkid {
 	int32_t l0_idx;
@@ -162,5 +185,10 @@ NTSTATUS kdf_algorithm_from_params(
 	const char *const kdf_algorithm_id,
 	const DATA_BLOB *const kdf_param,
 	struct KdfAlgorithm *const kdf_algorithm_out);
+
+NTSTATUS secret_agreement_algorithm_from_params(
+	const char *const algorithm_id,
+	const DATA_BLOB *const secret_agreement_algorithm_params,
+	struct SecretAgreementAlgorithm *const secret_agreement_algorithm_out);
 
 #endif /* LIB_CRYPTO_GKDI_H */
