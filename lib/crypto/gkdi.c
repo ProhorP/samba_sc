@@ -41,6 +41,115 @@ static const uint8_t kds_service[] = {
 	'r', 0, 'v', 0, 'i', 0, 'c', 0, 'e', 0, 0,   0,
 };
 
+static const uint8_t dh_algorithm[] = {
+	/* “DH” as a NULL‐terminated UTF‐16LE string. */
+	'D',
+	0,
+	'H',
+	0,
+	0,
+	0,
+};
+
+static const uint8_t ecdh_p256_algorithm[] = {
+	/* "ECDH_P256" as a NULL‐terminated UTF‐16LE string. */
+	'E', 0, 'C', 0, 'D', 0, 'H', 0, '_', 0,
+	'P', 0, '2', 0, '5', 0, '6', 0, 0,   0,
+};
+
+static const uint8_t ecdh_p384_algorithm[] = {
+	/* "ECDH_P384" as a NULL‐terminated UTF‐16LE string. */
+	'E', 0, 'C', 0, 'D', 0, 'H', 0, '_', 0,
+	'P', 0, '3', 0, '8', 0, '4', 0, 0,   0,
+};
+
+static const uint8_t ecdh_p521_algorithm[] = {
+	/* "ECDH_P521" as a NULL‐terminated UTF‐16LE string. */
+	'E', 0, 'C', 0, 'D', 0, 'H', 0, '_', 0,
+	'P', 0, '5', 0, '2', 0, '1', 0, 0,   0};
+
+/*
+ * [MS-GKDI] 2.2.3.1 FFC DH Key
+ */
+static const uint32_t dh_magic = 0x42504844;
+
+/*
+ * [FIPS-186-4] Appendix D.1.2.3 Curve P-256 - Gx
+ */
+static unsigned char ecdh_p256_x[] = {
+	0x6b, 0x17, 0xd1, 0xf2, 0xe1, 0x2c, 0x42, 0x47, 0xf8, 0xbc, 0xe6,
+	0xe5, 0x63, 0xa4, 0x40, 0xf2, 0x77, 0x03, 0x7d, 0x81, 0x2d, 0xeb,
+	0x33, 0xa0, 0xf4, 0xa1, 0x39, 0x45, 0xd8, 0x98, 0xc2, 0x96,
+};
+
+/*
+ * [FIPS-186-4] Appendix D.1.2.3 Curve P-256 - Gy
+ */
+static unsigned char ecdh_p256_y[] = {
+	0x4f, 0xe3, 0x42, 0xe2, 0xfe, 0x1a, 0x7f, 0x9b, 0x8e, 0xe7, 0xeb,
+	0x4a, 0x7c, 0x0f, 0x9e, 0x16, 0x2b, 0xce, 0x33, 0x57, 0x6b, 0x31,
+	0x5e, 0xce, 0xcb, 0xb6, 0x40, 0x68, 0x37, 0xbf, 0x51, 0xf5,
+};
+
+/*
+ * [MS-GKDI] 2.2.3.2 ECDH Key
+ */
+static const uint32_t ecdh_p256_magic = 0x45434B31;
+
+/*
+ * [FIPS-186-4] Appendix D.1.2.4 Curve P-384 - Gx
+ */
+static unsigned char ecdh_p384_x[] = {
+	0xaa, 0x87, 0xca, 0x22, 0xbe, 0x8b, 0x05, 0x37, 0x8e, 0xb1, 0xc7, 0x1e,
+	0xf3, 0x20, 0xad, 0x74, 0x6e, 0x1d, 0x3b, 0x62, 0x8b, 0xa7, 0x9b, 0x98,
+	0x59, 0xf7, 0x41, 0xe0, 0x82, 0x54, 0x2a, 0x38, 0x55, 0x02, 0xf2, 0x5d,
+	0xbf, 0x55, 0x29, 0x6c, 0x3a, 0x54, 0x5e, 0x38, 0x72, 0x76, 0x0a, 0xb7,
+};
+
+/*
+ * [FIPS-186-4] Appendix D.1.2.4 Curve P-384 - Gy
+ */
+static unsigned char ecdh_p384_y[] = {
+	0x36, 0x17, 0xde, 0x4a, 0x96, 0x26, 0x2c, 0x6f, 0x5d, 0x9e, 0x98, 0xbf,
+	0x92, 0x92, 0xdc, 0x29, 0xf8, 0xf4, 0x1d, 0xbd, 0x28, 0x9a, 0x14, 0x7c,
+	0xe9, 0xda, 0x31, 0x13, 0xb5, 0xf0, 0xb8, 0xc0, 0x0a, 0x60, 0xb1, 0xce,
+	0x1d, 0x7e, 0x81, 0x9d, 0x7a, 0x43, 0x1d, 0x7c, 0x90, 0xea, 0x0e, 0x5f,
+};
+
+/*
+ * [MS-GKDI] 2.2.3.2 ECDH Key
+ */
+static const uint32_t ecdh_p384_magic = 0x45434B33;
+
+/*
+ * [FIPS-186-4] Appendix D.1.2.5 Curve P-521 - Gx
+ */
+static unsigned char ecdh_p521_x[] = {
+	0x00, 0xc6, 0x85, 0x8e, 0x06, 0xb7, 0x04, 0x04, 0xe9, 0xcd, 0x9e,
+	0x3e, 0xcb, 0x66, 0x23, 0x95, 0xb4, 0x42, 0x9c, 0x64, 0x81, 0x39,
+	0x05, 0x3f, 0xb5, 0x21, 0xf8, 0x28, 0xaf, 0x60, 0x6b, 0x4d, 0x3d,
+	0xba, 0xa1, 0x4b, 0x5e, 0x77, 0xef, 0xe7, 0x59, 0x28, 0xfe, 0x1d,
+	0xc1, 0x27, 0xa2, 0xff, 0xa8, 0xde, 0x33, 0x48, 0xb3, 0xc1, 0x85,
+	0x6a, 0x42, 0x9b, 0xf9, 0x7e, 0x7e, 0x31, 0xc2, 0xe5, 0xbd, 0x66,
+};
+
+/*
+ * [FIPS-186-4] Appendix D.1.2.5 Curve P-521 - Gy
+ */
+static unsigned char ecdh_p521_y[] = {
+	0x01, 0x18, 0x39, 0x29, 0x6a, 0x78, 0x9a, 0x3b, 0xc0, 0x04, 0x5c,
+	0x8a, 0x5f, 0xb4, 0x2c, 0x7d, 0x1b, 0xd9, 0x98, 0xf5, 0x44, 0x49,
+	0x57, 0x9b, 0x44, 0x68, 0x17, 0xaf, 0xbd, 0x17, 0x27, 0x3e, 0x66,
+	0x2c, 0x97, 0xee, 0x72, 0x99, 0x5e, 0xf4, 0x26, 0x40, 0xc5, 0x50,
+	0xb9, 0x01, 0x3f, 0xad, 0x07, 0x61, 0x35, 0x3c, 0x70, 0x86, 0xa2,
+	0x72, 0xc2, 0x40, 0x88, 0xbe, 0x94, 0x76, 0x9f, 0xd1, 0x66, 0x50,
+};
+
+/*
+ * [MS-GKDI] 2.2.3.2 ECDH Key
+ */
+static const uint32_t ecdh_p521_magic = 0x45434B35;
+
 static struct Gkid gkid_from_u32_indices(const uint32_t l0_idx,
 					 const uint32_t l1_idx,
 					 const uint32_t l2_idx)
@@ -626,6 +735,385 @@ NTSTATUS compute_seed_key(TALLOC_CTX *mem_ctx,
 	}
 
 out:
+	return status;
+}
+
+NTSTATUS compute_group_private_key(TALLOC_CTX *mem_ctx,
+				   const struct ProvRootKey *const root_key,
+				   uint8_t seed_key[static const GKDI_KEY_LEN],
+				   DATA_BLOB *key_out)
+{
+	NTSTATUS status = NT_STATUS_OK;
+	gnutls_mac_algorithm_t algorithm = GNUTLS_MAC_UNKNOWN;
+	const uint8_t *secret_agreement_algorithm_id = NULL;
+	uint32_t secret_algorithm_size = 0;
+
+	if (key_out == NULL) {
+		status = NT_STATUS_INVALID_PARAMETER;
+		goto out;
+	}
+
+	/*
+	 * If RK.msKds-PrivateKey-Length is not a multiple of 8, it needs to be
+	 * rounded up to the next multiple of 8. RK.msKds-PrivateKey-Length is
+	 * in bits but key_out->length is in bytes.
+	 */
+	key_out->length = (root_key->private_key_length / 64) * 8;
+
+	algorithm = get_sp800_108_mac_algorithm(root_key->kdf_algorithm);
+	if (algorithm == GNUTLS_MAC_UNKNOWN) {
+		status = NT_STATUS_NOT_SUPPORTED;
+		goto out;
+	}
+
+	switch (root_key->secret_agreement_algorithm.id) {
+	case SECRET_AGREEMENT_ALGORITHM_DH:
+		secret_agreement_algorithm_id = dh_algorithm;
+		secret_algorithm_size = sizeof(dh_algorithm);
+		break;
+	case SECRET_AGREEMENT_ALGORITHM_ECDH_P256:
+		secret_agreement_algorithm_id = ecdh_p256_algorithm;
+		secret_algorithm_size = sizeof(ecdh_p256_algorithm);
+		break;
+	case SECRET_AGREEMENT_ALGORITHM_ECDH_P384:
+		secret_agreement_algorithm_id = ecdh_p384_algorithm;
+		secret_algorithm_size = sizeof(ecdh_p384_algorithm);
+		break;
+	case SECRET_AGREEMENT_ALGORITHM_ECDH_P521:
+		secret_agreement_algorithm_id = ecdh_p521_algorithm;
+		secret_algorithm_size = sizeof(ecdh_p521_algorithm);
+		break;
+	default:
+		status = NT_STATUS_NOT_SUPPORTED;
+		goto out;
+	}
+
+	status = samba_gnutls_sp800_108_derive_key(
+		seed_key,
+		GKDI_KEY_LEN,
+		NULL,
+		0,
+		kds_service,
+		sizeof kds_service,
+		(uint8_t *)secret_agreement_algorithm_id,
+		secret_algorithm_size,
+		algorithm,
+		key_out->data,
+		key_out->length);
+	if (!NT_STATUS_IS_OK(status)) {
+		goto out;
+	}
+
+out:
+	return status;
+}
+
+NTSTATUS compute_group_public_key(TALLOC_CTX *mem_ctx,
+				  const struct ProvRootKey *const root_key,
+				  uint8_t seed_key[static const GKDI_KEY_LEN],
+				  const struct Gkid gkid,
+				  DATA_BLOB *group_public_key_out)
+{
+	NTSTATUS status = NT_STATUS_OK;
+	int rc = 0;
+	DATA_BLOB private_key = {};
+	gnutls_privkey_t privkey = NULL;
+	gnutls_datum_t privkey_data = {};
+	gnutls_pubkey_t pubkey = NULL;
+	gnutls_datum_t pubkey_data = {};
+	gnutls_datum_t prime_data = {};
+	gnutls_datum_t generator_data = {};
+	gnutls_dh_params_t dh_params = NULL;
+	gnutls_ecc_curve_t priv_curve = GNUTLS_ECC_CURVE_SECP256R1;
+	gnutls_ecc_curve_t pub_curve = GNUTLS_ECC_CURVE_SECP256R1;
+	gnutls_datum_t pub_x = {};
+	gnutls_datum_t pub_y = {};
+	gnutls_datum_t out_x = {};
+	gnutls_datum_t out_y = {};
+	uint32_t magic = 0;
+	struct ECDHKey ecdh_key = {};
+	struct FfcDhKey ffc_dh_key = {};
+	enum ndr_err_code ndr_err = NDR_ERR_SUCCESS;
+	TALLOC_CTX *tmp_ctx = NULL;
+
+	tmp_ctx = talloc_new(NULL);
+	if (tmp_ctx == NULL) {
+		status = NT_STATUS_NO_MEMORY;
+		goto out;
+	}
+
+	if (group_public_key_out == NULL) {
+		status = NT_STATUS_INVALID_PARAMETER;
+		goto out;
+	}
+
+	/*
+	 * 1. First, the server MUST validate the root key configuration
+	 * attributes related to public keys:
+	 * * If RK.msKds-SecretAgreement-AlgorithmID is equal to "DH", RK.msKds-
+	 * SecretAgreement-Param MUST be in the format specified in
+	 * section 2.2.2, and the Key length field of
+	 * RK.msKds-SecretAgreement-Param MUST be equal to RK.msKds-
+	 * PublicKey-Length.
+	 * * If RK.msKds-SecretAgreement-AlgorithmID is equal to "ECDH_P256",
+	 * "ECDH_P384" or "ECDH_P521", the RK.msKds-SecretAgreement-Param MUST
+	 * be NULL.
+	 */
+	if (root_key->secret_agreement_algorithm.id ==
+	    SECRET_AGREEMENT_ALGORITHM_DH)
+	{
+		if (root_key->secret_agreement_algorithm.param.dh_parameters ==
+		    NULL)
+		{
+			status = NT_STATUS_INVALID_PARAMETER;
+			goto out;
+		}
+	} else if (root_key->secret_agreement_algorithm.id ==
+			   SECRET_AGREEMENT_ALGORITHM_ECDH_P256 ||
+		   root_key->secret_agreement_algorithm.id ==
+			   SECRET_AGREEMENT_ALGORITHM_ECDH_P384 ||
+		   root_key->secret_agreement_algorithm.id ==
+			   SECRET_AGREEMENT_ALGORITHM_ECDH_P521)
+	{
+		if (root_key->secret_agreement_algorithm.param.dh_parameters !=
+		    NULL)
+		{
+			status = NT_STATUS_INVALID_PARAMETER;
+			goto out;
+		}
+	} else {
+		status = NT_STATUS_NOT_SUPPORTED;
+		goto out;
+	}
+
+	private_key.data = talloc_array(tmp_ctx,
+					uint8_t,
+					root_key->private_key_length);
+	if (!private_key.data) {
+		status = NT_STATUS_NO_MEMORY;
+		goto out;
+	}
+	private_key.length = root_key->private_key_length;
+
+	/*
+	 * 2. Having validated the root key configuration, the server MUST then
+	 * compute the group private key in the following manner: PrivKey(SD,
+	 * RK, L0, L1, L2) = KDF(HashAlg, Key(SD, RK, L0, L1, L2), "KDS
+	 * service", RK.msKds-SecretAgreement-AlgorithmID,
+	 * RK.msKds-PrivateKey-Length) Note If RK.msKds-PrivateKey-Length is not
+	 * a multiple of 8, it needs to be rounded up to the next multiple of 8.
+	 */
+	status = compute_group_private_key(tmp_ctx,
+					   root_key,
+					   seed_key,
+					   &private_key);
+	if (!NT_STATUS_IS_OK(status)) {
+		goto out;
+	}
+
+	/*
+	 * 3. Lastly, the server MUST compute the group public key PubKey(SD,
+	 * RK, L0, L1, L2) as follows:
+	 * * If RK.msKds-SecretAgreement-AlgorithmID is equal to "DH", the
+	 * server MUST compute PubKey(SD, RK, L0, L1, L2) by using the method
+	 * specified in [SP800-56A] section 5.6.1.1, with the group parameters
+	 * specified in RK.msKds-SecretAgreement-Param, and with PrivKey(SD, RK,
+	 * L0, L1, L2) as the private key.
+	 * * If RK.msKds-SecretAgreement-AlgorithmID is equal to "ECDH_P256",
+	 * "ECDH_P384", or "ECDH_P521", the server MUST compute PubKey(SD, RK,
+	 * L0, L1, L2) by using the method specified in [SP800-56A]
+	 * section 5.6.1.2, with PrivKey(SD, RK, L0, L1, L2) as the private key
+	 * d, and by using the domain parameters from [FIPS186] Appendix
+	 * D.1.2.3, D.1.2.4, or D.1.2.5, respectively.
+	 */
+	rc = gnutls_pubkey_init(&pubkey);
+	if (rc < 0) {
+		status = gnutls_error_to_ntstatus(rc, NT_STATUS_INTERNAL_ERROR);
+		goto out;
+	}
+	privkey_data = (gnutls_datum_t){.data = private_key.data,
+					.size = private_key.length};
+
+	rc = gnutls_privkey_init(&privkey);
+	if (rc < 0) {
+		status = gnutls_error_to_ntstatus(rc, NT_STATUS_INTERNAL_ERROR);
+		goto out;
+	}
+
+	if (root_key->secret_agreement_algorithm.id ==
+	    SECRET_AGREEMENT_ALGORITHM_DH)
+	{
+		prime_data = (gnutls_datum_t){
+			.data = root_key->secret_agreement_algorithm.param
+					.dh_parameters->field_order,
+			.size = root_key->secret_agreement_algorithm.param
+					.dh_parameters->key_length};
+
+		generator_data = (gnutls_datum_t){
+			.data = root_key->secret_agreement_algorithm.param
+					.dh_parameters->generator,
+			.size = root_key->secret_agreement_algorithm.param
+					.dh_parameters->key_length};
+
+		rc = gnutls_dh_params_init(&dh_params);
+		if (rc < 0) {
+			status = gnutls_error_to_ntstatus(
+				rc, NT_STATUS_INTERNAL_ERROR);
+			goto out;
+		}
+
+		rc = gnutls_dh_params_import_raw(dh_params,
+						 &prime_data,
+						 &generator_data);
+		if (rc < 0) {
+			status = gnutls_error_to_ntstatus(
+				rc, NT_STATUS_INTERNAL_ERROR);
+			goto out;
+		}
+
+		rc = gnutls_privkey_import_dh_raw(privkey,
+						  dh_params,
+						  &generator_data,
+						  &privkey_data);
+		if (rc < 0) {
+			status = gnutls_error_to_ntstatus(
+				rc, NT_STATUS_INTERNAL_ERROR);
+			goto out;
+		}
+
+		rc = gnutls_pubkey_import_privkey(pubkey, privkey, 0, 0);
+		if (rc < 0) {
+			status = gnutls_error_to_ntstatus(
+				rc, NT_STATUS_INTERNAL_ERROR);
+			goto out;
+		}
+
+		rc = gnutls_privkey_derive_secret(
+			privkey, pubkey, NULL, &pubkey_data, 0);
+		if (rc < 0) {
+			status = gnutls_error_to_ntstatus(
+				rc, NT_STATUS_INTERNAL_ERROR);
+			goto out;
+		}
+	} else {
+		switch (root_key->secret_agreement_algorithm.id) {
+		case SECRET_AGREEMENT_ALGORITHM_ECDH_P256:
+			priv_curve = GNUTLS_ECC_CURVE_SECP256R1;
+
+			pub_x.data = ecdh_p256_x;
+			pub_x.size = sizeof ecdh_p256_x;
+
+			pub_y.data = ecdh_p256_y;
+			pub_y.size = sizeof ecdh_p256_y;
+
+			magic = ecdh_p256_magic;
+			break;
+		case SECRET_AGREEMENT_ALGORITHM_ECDH_P384:
+			priv_curve = GNUTLS_ECC_CURVE_SECP384R1;
+
+			pub_x.data = ecdh_p384_x;
+			pub_x.size = sizeof ecdh_p384_x;
+
+			pub_y.data = ecdh_p384_y;
+			pub_y.size = sizeof ecdh_p384_y;
+
+			magic = ecdh_p384_magic;
+			break;
+		case SECRET_AGREEMENT_ALGORITHM_ECDH_P521:
+			priv_curve = GNUTLS_ECC_CURVE_SECP521R1;
+
+			pub_x.data = ecdh_p521_x;
+			pub_x.size = sizeof ecdh_p521_x;
+
+			pub_y.data = ecdh_p521_y;
+			pub_y.size = sizeof ecdh_p521_y;
+
+			magic = ecdh_p521_magic;
+			break;
+		default:
+			break;
+		}
+
+		rc = gnutls_privkey_import_ecc_raw(
+			privkey, priv_curve, &pub_x, &pub_y, &privkey_data);
+		if (rc < 0) {
+			status = gnutls_error_to_ntstatus(
+				rc, NT_STATUS_INTERNAL_ERROR);
+			goto out;
+		}
+
+		rc = gnutls_pubkey_import_privkey(pubkey, privkey, 0, 0);
+		if (rc < 0) {
+			status = gnutls_error_to_ntstatus(
+				rc, NT_STATUS_INTERNAL_ERROR);
+			goto out;
+		}
+
+		rc = gnutls_pubkey_export_ecc_raw(pubkey, NULL, &out_x, &out_y);
+		if (rc < 0) {
+			status = gnutls_error_to_ntstatus(
+				rc, NT_STATUS_INTERNAL_ERROR);
+			goto out;
+		}
+	}
+
+	if (root_key->secret_agreement_algorithm.id ==
+	    SECRET_AGREEMENT_ALGORITHM_DH)
+	{
+		ffc_dh_key.magic = dh_magic;
+		ffc_dh_key.key_length = pubkey_data.size;
+		ffc_dh_key.field_order = prime_data.data;
+		ffc_dh_key.generator = generator_data.data;
+		ffc_dh_key.public_key = pubkey_data.data;
+
+		ndr_err = ndr_push_struct_blob(group_public_key_out,
+					       mem_ctx,
+					       &ffc_dh_key,
+					       (ndr_push_flags_fn_t)
+						       ndr_push_FfcDhKey);
+		if (!NDR_ERR_CODE_IS_SUCCESS(ndr_err)) {
+			status = ndr_map_error2ntstatus(ndr_err);
+			/*
+			 * We fallthrough to out here anyway and we need
+			 * to cleanup pubkey_data.data, hence we do not
+			 * use 'goto out' here.
+			 */
+		}
+	} else {
+		ecdh_key.magic = magic;
+		ecdh_key.x = out_x.data;
+		ecdh_key.y = out_y.data;
+		ecdh_key.key_length = pub_x.size;
+
+		ndr_err = ndr_push_struct_blob(group_public_key_out,
+					       mem_ctx,
+					       &ecdh_key,
+					       (ndr_push_flags_fn_t)
+						       ndr_push_ECDHKey);
+
+		if (!NDR_ERR_CODE_IS_SUCCESS(ndr_err)) {
+			status = ndr_map_error2ntstatus(ndr_err);
+			goto out;
+		}
+	}
+
+out:
+	if (privkey_data.data) {
+		memset_s(privkey_data.data,
+			 privkey_data.size,
+			 0,
+			 privkey_data.size);
+	}
+
+	talloc_free(tmp_ctx);
+
+	if (dh_params) {
+		gnutls_dh_params_deinit(dh_params);
+	}
+
+	gnutls_privkey_deinit(privkey);
+	gnutls_pubkey_deinit(pubkey);
+
 	return status;
 }
 
