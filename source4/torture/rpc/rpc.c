@@ -652,6 +652,7 @@ NTSTATUS torture_rpc_init(TALLOC_CTX *ctx)
 	torture_suite_add_suite(suite, torture_rpc_clusapi(suite));
 	torture_suite_add_suite(suite, torture_rpc_witness(suite));
 	torture_suite_add_suite(suite, torture_rpc_mdssvc(suite));
+	torture_suite_add_suite(suite, torture_rpc_gkdi(suite));
 
 	suite->description = talloc_strdup(suite, "DCE/RPC protocol and interface tests");
 
