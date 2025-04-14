@@ -2044,7 +2044,7 @@ client use spnego = yes</string>
       <string id="POL_FCF4AF88_1B2D_5A6E_B630_7E88FA13F4EB_Help">Указывает, какие серверы конечных точек DCE/RPC должны быть запущены.
 
 Значение по умолчанию:
-epmapper, wkssvc, rpcecho, samr, netlogon, lsarpc, drsuapi, dssetup, unixinfo, browser, eventlog6, backupkey, dnsserver
+epmapper, wkssvc, rpcecho, samr, netlogon, lsarpc, drsuapi, dssetup, unixinfo, browser, eventlog6, backupkey, dnsserver, gkdi
 
 Пример:
 rpcecho</string>
@@ -2405,7 +2405,7 @@ smb2 disable oplock break retry = no</string>
 
 Поведение может быть перезаписано для каждого имени интерфейса (например, lsarpc, netlogon, samr, srvsvc, winreg, wkssvc …) с помощью параметра 'allow dcerpc auth level connect: interface = yes'.
 
-Эта опция имеет приоритет над ограничениями, специфичными для реализации. Например, протоколы drsuapi и backupkey требуют DCERPC_AUTH_LEVEL_PRIVACY. Протокол dnsserver требует DCERPC_AUTH_LEVEL_INTEGRITY.
+Эта опция имеет приоритет над ограничениями, специфичными для реализации. Например, протоколы drsuapi, gkdi и backupkey требуют DCERPC_AUTH_LEVEL_PRIVACY. Протокол dnsserver требует DCERPC_AUTH_LEVEL_INTEGRITY.
 
 Значение по умолчанию:
 allow dcerpc auth level connect = no</string>
@@ -4697,7 +4697,7 @@ Welcome to \s \r \l</string>
       <presentation id="POL_F0990CDC_21DF_538D_9282_2749E00AF99E">
         <textBox refId="TXT_E8C89EE3_FF60_5216_A5C7_803A3AA8D790">
           <label>dcerpc endpoint servers</label>
-          <defaultValue>epmapper, wkssvc, rpcecho, samr, netlogon, lsarpc, drsuapi, dssetup, unixinfo, browser, eventlog6, backupkey, dnsserver</defaultValue>
+          <defaultValue>epmapper, wkssvc, rpcecho, samr, netlogon, lsarpc, drsuapi, dssetup, unixinfo, browser, eventlog6, backupkey, dnsserver, gkdi</defaultValue>
         </textBox>
       </presentation>
       <presentation id="POL_BD3F8921_7AF6_57F8_894A_9C73D40C6202">
