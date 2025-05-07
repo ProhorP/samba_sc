@@ -65,12 +65,12 @@ static NTSTATUS garbage_collect_tombstones_part(TALLOC_CTX *mem_ctx,
 	}
 
 	DBG_INFO("Doing a full scan on %s and looking for deleted objects\n",
-		  ldb_dn_get_linearized(part->dn));
+		  ldb_dn_get_linearized(do_dn));
 
 	flags = DSDB_SEARCH_SHOW_RECYCLED |
 		DSDB_SEARCH_SHOW_DN_IN_STORAGE_FORMAT |
 		DSDB_SEARCH_REVEAL_INTERNALS;
-	ret = dsdb_search(samdb, tmp_ctx, &res, part->dn, LDB_SCOPE_SUBTREE,
+	ret = dsdb_search(samdb, tmp_ctx, &res, do_dn, LDB_SCOPE_ONELEVEL,
 			  attrs, flags, "%s", filter);
 
 	if (ret != LDB_SUCCESS) {
