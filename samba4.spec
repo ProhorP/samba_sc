@@ -128,7 +128,7 @@
 %define lmdb_version 0.9.16
 
 Name:    samba
-Version: 4.21.5
+Version: 4.21.6
 Release: alt1
 
 Group:   System/Servers
@@ -708,14 +708,6 @@ Requires: %name-libs = %version-%release
 %description -n python3-module-%name
 The %rname-python3 package contains the Python3 libraries needed by programs
 that use SMB, RPC and other Samba provided protocols in Python3 programs.
-
-# %package -n python3-module-%name-devel
-# Summary: Samba Python3 development libraries
-# Group: Development/Other
-# Requires: python3-module-%name = %version-%release
-
-# %description -n python3-module-%name-devel
-# The python3-module-%name package contains the Python3 libraries development files.
 
 %package devel
 Summary: Developer tools for Samba libraries
@@ -1758,7 +1750,7 @@ control role-sambashare enabled
 %_pkgconfigdir/wbclient.pc
 %endif
 
-%if_with libldb
+%if_with ldb
 %exclude %_includedir/samba-4.0/ldb.h
 %exclude %_includedir/samba-4.0/ldb_errors.h
 %exclude %_includedir/samba-4.0/ldb_handlers.h
@@ -2120,11 +2112,6 @@ control role-sambashare enabled
 %python3_sitelibdir/samba/
 %_samba_mod_libdir/*.cpython-*.so
 
-# Temporary disable python3-module-%name-devel
-# %files -n python3-module-%name-devel
-# %_pkgconfigdir/samba*.cpython-*.pc
-# %_libdir/libsamba*.cpython-*.so
-
 %if_with doc
 %files doc
 %doc %_defaultdocdir/%rname/htmldocs
@@ -2388,6 +2375,19 @@ control role-sambashare enabled
 %endif
 
 %changelog
+* Tue Jun 17 2025 Evgeny Sinelnikov <sin@altlinux.org> 4.21.6-alt1
+- Update to maintenance release of Samba 4.21
+- Security fixes (Samba#15707):
+ + CVE-2025-0620: smbd doesn't pick up group membership changes
+                  when re-authenticating an expired SMB session:
+                  https://www.samba.org/samba/security/CVE-2025-0620.html
+- Major fixes from upstream (Samba#15767, Samba#15727, Samba#15841, Samba#15851)
+  + Deadlock between two smbd processes.
+  + net ad join fails with "Failed to join domain:
+    failed to create kerberos keytab".
+  + Wide link issue in samba 4.22.
+  + dcerpcd not able to bind to listening port.
+
 * Tue May 13 2025 Evgeny Sinelnikov <sin@altlinux.org> 4.21.5-alt1
 - Update to stable release of Samba 4.21.5 (thx Vladimir Rubanov).
 - Major changes from upstream:
