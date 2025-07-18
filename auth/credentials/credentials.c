@@ -494,6 +494,10 @@ _PUBLIC_ bool cli_credentials_authentication_requested(struct cli_credentials *c
 		return true;
 	}
 
+	if (cli_credentials_get_kerberos_state(cred) == CRED_USE_KERBEROS_DESIRED) {
+		return true;
+	}
+
 	gensec_features = cli_credentials_get_gensec_features(cred);
 	if (gensec_features & GENSEC_FEATURE_NTLM_CCACHE) {
 		return true;
