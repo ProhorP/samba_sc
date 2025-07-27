@@ -1060,12 +1060,19 @@ NTSTATUS sync_pw2keytabs(const char *prefer_dc)
 	int i;
 	size_t num_keytabs;
 
-	DBG_DEBUG("Syncing machine password from secrets to keytabs.\n");
-
-	if (lp_server_role() != ROLE_DOMAIN_MEMBER) {
-		TALLOC_FREE(frame);
-		return NT_STATUS_OK; /* nothing todo */
+	switch (lp_server_role()) {
+	case ROLE_DOMAIN_MEMBER:
+	case ROLE_ACTIVE_DIRECTORY_DC:
+	case ROLE_IPA_DC:
+		break;
+	default:
+		DBG_DEBUG("Skip syncing machine password from secrets to "
+			  "keytabs. Nothing to do on if server role is not "
+			  "domain member or domain controller.\n");
+		goto out;
 	}
+
+	DBG_DEBUG("Syncing machine password from secrets to keytabs.\n");
 
 	state = talloc_zero(frame, struct pw2kt_global_state);
 	if (state == NULL) {
@@ -1167,6 +1174,7 @@ params_ready:
 		}
 	}
 
+out:
 	TALLOC_FREE(frame);
 	return NT_STATUS_OK;
 }
