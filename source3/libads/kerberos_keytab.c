@@ -487,7 +487,33 @@ static krb5_error_code pw2kt_process_kt2ar(struct pw2kt_keytab_state *state2)
 	return ret != 0 ? ret : ret2;
 }
 
+static void pw2kt_update_spn(char *princs)
+{
+	bool ok = false;
+
+	if (strequal_m(princs, "HOST")) {
+		DBG_DEBUG("Convert SPN prefix '%s' to 'host' for client compatibility\n",
+			  princs);
+		ok = true;
+	} else if (strncasecmp_m(princs, "HOST/", 5) == 0) {
+		DBG_DEBUG("Adjust prefix of SPN '%s' to 'host' for client compatibility\n",
+			  princs);
+		ok = true;
+	}
+
+	if (ok) {
+		strncpy(princs, "host", 4);
+	}
+}
+
 #define ADD_INFO(P)                                                    \
+	ret = pw2kt_process_add_info(state2, kvno, (P), gstate->info); \
+	if (ret != 0) {                                                \
+		return ADS_ERROR_KRB5(ret);                            \
+	}
+
+#define ADD_INFO_SPN(P)                                                \
+	pw2kt_update_spn((P));                                         \
 	ret = pw2kt_process_add_info(state2, kvno, (P), gstate->info); \
 	if (ret != 0) {                                                \
 		return ADS_ERROR_KRB5(ret);                            \
@@ -513,7 +539,7 @@ static ADS_STATUS pw2kt_add_prefix(struct pw2kt_global_state *gstate,
 	if (princ_s == NULL) {
 		return ADS_ERROR_KRB5(ENOMEM);
 	}
-	ADD_INFO(princ_s);
+	ADD_INFO_SPN(princ_s);
 
 	/* Add prefix/NETBIOSNAME@REALM */
 	princ_s = talloc_asprintf(talloc_tos(),
@@ -524,7 +550,7 @@ static ADS_STATUS pw2kt_add_prefix(struct pw2kt_global_state *gstate,
 	if (princ_s == NULL) {
 		return ADS_ERROR_KRB5(ENOMEM);
 	}
-	ADD_INFO(princ_s);
+	ADD_INFO_SPN(princ_s);
 
 	if (keytabptr->netbios_aliases) {
 		for (netbios_alias = lp_netbios_aliases();
@@ -548,7 +574,7 @@ static ADS_STATUS pw2kt_add_prefix(struct pw2kt_global_state *gstate,
 			if (princ_s == NULL) {
 				return ADS_ERROR_KRB5(ENOMEM);
 			}
-			ADD_INFO(princ_s);
+			ADD_INFO_SPN(princ_s);
 
 			/* Add prefix/netbiosalias.dnsdomain@REALM */
 			princ_s = talloc_asprintf(talloc_tos(),
@@ -560,7 +586,7 @@ static ADS_STATUS pw2kt_add_prefix(struct pw2kt_global_state *gstate,
 			if (princ_s == NULL) {
 				return ADS_ERROR_KRB5(ENOMEM);
 			}
-			ADD_INFO(princ_s);
+			ADD_INFO_SPN(princ_s);
 		}
 	}
 
@@ -578,7 +604,7 @@ static ADS_STATUS pw2kt_add_prefix(struct pw2kt_global_state *gstate,
 			if (princ_s == NULL) {
 				return ADS_ERROR_KRB5(ENOMEM);
 			}
-			ADD_INFO(princ_s);
+			ADD_INFO_SPN(princ_s);
 		}
 	}
 	return ADS_SUCCESS;
@@ -612,13 +638,13 @@ static ADS_STATUS pw2kt_process_specifier(struct pw2kt_global_state *gstate,
 		break;
 	case SPN_SPEC_SYNC_SPNS:
 		for (i = 0; i < gstate->ad_num_spns; i++) {
-			ADD_INFO(gstate->ad_spn_array[i]);
+			ADD_INFO_SPN(gstate->ad_spn_array[i]);
 		}
 		break;
 	case SPN_SPEC_FULL:
 		num_spn_spec_vals = talloc_array_length(spec->spn_spec_vals);
 		for (i = 0; i < num_spn_spec_vals; i++) {
-			ADD_INFO(spec->spn_spec_vals[i]);
+			ADD_INFO_SPN(spec->spn_spec_vals[i]);
 		}
 		break;
 	case SPN_SPEC_PREFIX:
