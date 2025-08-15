@@ -487,7 +487,27 @@ static krb5_error_code pw2kt_process_kt2ar(struct pw2kt_keytab_state *state2)
 	return ret != 0 ? ret : ret2;
 }
 
+static void pw2kt_update_spn(char *princs)
+{
+	bool ok = false;
+
+	if (strequal_m(princs, "HOST")) {
+		DBG_DEBUG("Convert SPN prefix '%s' to 'host' for client compatibility\n",
+			  princs);
+		ok = true;
+	} else if (strncasecmp_m(princs, "HOST/", 5) == 0) {
+		DBG_DEBUG("Adjust prefix of SPN '%s' to 'host' for client compatibility\n",
+			  princs);
+		ok = true;
+	}
+
+	if (ok) {
+		strncpy(princs, "host", 4);
+	}
+}
+
 #define ADD_INFO(P)                                                    \
+	pw2kt_update_spn((P));                                         \
 	ret = pw2kt_process_add_info(state2, kvno, (P), gstate->info); \
 	if (ret != 0) {                                                \
 		return ADS_ERROR_KRB5(ret);                            \
