@@ -1,0 +1,10 @@
+<samba:parameter name="dns resolve srv records"
+                 context="G"
+                 type="boolean"
+                 xmlns:samba="http://www.samba.org/samba/DTD/samba-doc">
+<description>
+	<para>Fill in the srv entries with ip addresses in the additional section.
+	</para>
+</description>
+<value type="default">yes</value>
+</samba:parameter>
