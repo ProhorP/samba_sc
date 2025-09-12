@@ -843,6 +843,8 @@ void loadparm_s3_init_globals(struct loadparm_context *lp_ctx,
 
 	Globals.client_use_spnego = true;
 
+	Globals.client_resolve_dfs_names = true;
+
 	Globals.client_signing = SMB_SIGNING_DEFAULT;
 	Globals._client_ipc_signing = SMB_SIGNING_DEFAULT;
 	Globals.server_signing = SMB_SIGNING_DEFAULT;
