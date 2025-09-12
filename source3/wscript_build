@@ -466,6 +466,7 @@ bld.SAMBA3_LIBRARY('libsmb',
 			NDR_QUOTA
                         cli_smb_common
                         tevent
+                        dsgetdcname
                         ''',
                    private_library=True)
 
