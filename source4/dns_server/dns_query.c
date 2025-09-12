@@ -384,6 +384,57 @@ static WERROR add_zone_authority_record(struct dns_server *dns,
 	return WERR_OK;
 }
 
+static WERROR srv_fill_additional(struct dns_server *dns,
+					TALLOC_CTX *mem_ctx,
+					struct dns_res_rec *answers,
+					struct dns_res_rec **nsrecs)
+{
+	struct dnsp_DnssrvRpcRecord *recs;
+	struct dns_res_rec *ns = *nsrecs;
+	uint16_t rec_count;
+	struct ldb_dn *dn = NULL;
+	unsigned int ri;
+	WERROR werror;
+
+	for (size_t i = 0; i < talloc_array_length(answers); i++) {
+
+		if (answers[i].rr_type != DNS_QTYPE_SRV) {
+			continue;
+		}
+
+		werror = dns_name2dn(dns,
+				     mem_ctx,
+				     answers[i].rdata.srv_record.target,
+				     &dn);
+		if (!W_ERROR_IS_OK(werror)) {
+			return werror;
+		}
+
+		werror =
+			dns_lookup_records(dns, mem_ctx, dn, &recs, &rec_count);
+		if (!W_ERROR_IS_OK(werror)) {
+			return werror;
+		}
+
+		for (ri = 0; ri < rec_count; ri++) {
+			if (recs[ri].wType == DNS_TYPE_A ||
+			    recs[ri].wType == DNS_TYPE_AAAA) {
+				werror = add_response_rr(
+					answers[i].rdata.srv_record.target,
+					&recs[ri],
+					&ns);
+				if (!W_ERROR_IS_OK(werror)) {
+					return werror;
+				}
+			}
+		}
+	}
+
+	*nsrecs = ns;
+
+	return WERR_OK;
+}
+
 static struct tevent_req *handle_authoritative_send(
 	TALLOC_CTX *mem_ctx, struct tevent_context *ev,
 	struct dns_server *dns, const char *forwarder,
@@ -1033,6 +1084,10 @@ struct tevent_req *dns_server_process_query_send(
 		if (tevent_req_nomem(state->nsrecs, req)) {
 			return tevent_req_post(req, ev);
 		}
+		state->additional = talloc_array(state, struct dns_res_rec, 0);
+		if (tevent_req_nomem(state->additional, req)) {
+			return tevent_req_post(req, ev);
+		}
 
 		subreq = handle_authoritative_send(
 			state, ev, dns, (forwarders == NULL ? NULL : forwarders[0]),
@@ -1175,6 +1230,19 @@ static void dns_server_process_query_got_auth(struct tevent_req *subreq)
 		DBG_WARNING("Failed to add SOA record: %s\n",
 				win_errstr(werr2));
 		return;
+	}
+
+	if (lpcfg_dns_resolve_srv_records(state->dns->task->lp_ctx)) {
+		werr2 = srv_fill_additional(state->dns,
+					    state,
+					    state->answers,
+					    &state->additional);
+		if (tevent_req_werror(req, werr2)) {
+			DBG_WARNING(
+				"SRV-record: Failed fill additional(ip): %s\n",
+				win_errstr(werr2));
+			return;
+		}
 	}
 
 	state->ancount = talloc_array_length(state->answers);
