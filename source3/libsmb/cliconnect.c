@@ -36,6 +36,7 @@
 #include "../libcli/smb/smb_seal.h"
 #include "lib/param/param.h"
 #include "../libcli/smb/smb2_negotiate_context.h"
+#include "libsmb/dsgetdcname.h"
 
 static char *cli_session_setup_get_account(TALLOC_CTX *mem_ctx,
 					   const char *principal);
@@ -2524,6 +2525,42 @@ struct cli_connect_nb_state {
 static void cli_connect_nb_done(struct tevent_req *subreq);
 static const char *cli_canonicalize_host(TALLOC_CTX *ctx, const char *host);
 
+static bool
+resolve_dfs(TALLOC_CTX *mem_ctx, const char *domain_name, char **return_dcname)
+{
+
+	NTSTATUS status = NT_STATUS_OK;
+	struct netr_DsRGetDCNameInfo *info_def = NULL;
+	struct netr_DsRGetDCNameInfo *info_site = NULL;
+	char *dcname = NULL;
+	TALLOC_CTX *frame = talloc_stackframe();
+
+	status = dsgetdcname(frame,
+			     NULL,
+			     domain_name,
+			     NULL,
+			     NULL,
+			     DS_RETURN_DNS_NAME,
+			     &info_def);
+	if (!NT_STATUS_IS_OK(status)) {
+		goto end;
+	}
+
+	dcname = talloc_strdup(frame, strip_hostname(info_def->dc_unc));
+	if (!dcname) {
+		DEBUG(1, ("fail talloc_strdup dc_name'\n"));
+		status = NT_STATUS_NO_MEMORY;
+		goto end;
+	}
+
+	*return_dcname = talloc_move(mem_ctx, &dcname);
+
+end:
+	TALLOC_FREE(frame);
+
+	return NT_STATUS_IS_OK(status);
+}
+
 static struct tevent_req *cli_connect_nb_send(
 	TALLOC_CTX *mem_ctx, struct tevent_context *ev,
 	const char *host, const struct sockaddr_storage *dest_ss,
@@ -2552,8 +2589,11 @@ static struct tevent_req *cli_connect_nb_send(
 			}
 		}
 
+		char *dcname = NULL;
 		lp_ctx = loadparm_init_s3(mem_ctx, loadparm_s3_helpers());
-		if (lp_ctx != NULL && lpcfg_client_force_dns_canonicalize_hostname(lp_ctx)) {
+		if (lp_ctx != NULL && lpcfg_client_resolve_dfs_names(lp_ctx) && resolve_dfs(mem_ctx, host, &dcname)) {
+			state->desthost = dcname;
+		} else if (lp_ctx != NULL && lpcfg_client_force_dns_canonicalize_hostname(lp_ctx)) {
 			state->desthost = cli_canonicalize_host(mem_ctx, host);
 		} else {
 			state->desthost = host;
