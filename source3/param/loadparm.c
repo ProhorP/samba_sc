@@ -798,6 +798,7 @@ void loadparm_s3_init_globals(struct loadparm_context *lp_ctx,
 
 	Globals.wins_dns_proxy = true;
 	Globals.dns_port = DNS_SERVICE_PORT;
+	Globals.dns_resolve_srv_records = true;
 
 	Globals.allow_trusted_domains = true;
 	lpcfg_string_set(Globals.ctx, &Globals.idmap_backend, "tdb");
