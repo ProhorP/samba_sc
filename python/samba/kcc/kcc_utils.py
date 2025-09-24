@@ -2195,7 +2195,7 @@ class SiteLink(object):
                     self.site_list.append((guid, dnstr))
 
         if "schedule" in msg:
-            self.schedule = ndr_unpack(drsblobs.schedule, value)
+            self.schedule = ndr_unpack(drsblobs.schedule, msg["schedule"][0])
         else:
             self.schedule = new_connection_schedule()
 
