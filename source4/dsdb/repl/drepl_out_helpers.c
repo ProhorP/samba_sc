@@ -36,6 +36,13 @@
 #include "../lib/util/tevent_ntstatus.h"
 #include "libcli/security/security.h"
 
+#define MINUTES_IN_A_DAY                        (24 * 60)
+#define MINUTES_IN_AN_HOUR                      (60)
+#define MAXIMUM_ALLOWED_TIME_INTERVAL           (672)
+#define FIFTEEN_MINUTE_PERIOD                   (15)
+#define INTERVAL_SIZE                           (8)
+#define BITS_IN_BYTE                            (8)
+
 #undef DBGC_CLASS
 #define DBGC_CLASS            DBGC_DRS_REPL
 
@@ -1367,5 +1374,42 @@ WERROR dreplsrv_op_pull_source_recv(struct tevent_req *req)
 
 	tevent_req_received(req);
 	return WERR_OK;
+}
+
+/*
+ * Returns true if the given time is scheduled for replication
+ * according to the REPLTIMES schedule.
+ * See [MS-DRSR] 5.165 (REPLTIMES).
+ * schedule:
+ * A byte array of length 84 that is used to set periodic replication times. Each bit in this byte
+ * array represents a 15-minute period for which replication can be scheduled within a one-week
+ * period. The replication schedule begins on Sunday 12:00:00 AM UTC. Each byte in the array
+ * represents a two-hour period of a week in ascending order, starting Sunday 12:00:00 AM UTC.
+ * The most significant bit of a byte represents the earliest 15-minute period in the two-hour period,
+ * and the rest of the bits in the byte represent their respective 15-minute periods in this order.
+ */
+bool drepl_is_time_scheduled(const uint8_t schedule[84], time_t now)
+{
+	struct tm tm_utc;
+	struct tm *ptm = gmtime(&now);
+	if (!ptm) return false;
+	tm_utc = *ptm;
+
+	/* Calculate minutes since Sunday 00:00 UTC, where 0=Sunday */
+	int32_t day_of_week = tm_utc.tm_wday;
+	int32_t minutes = day_of_week * MINUTES_IN_A_DAY 
+		+ tm_utc.tm_hour * MINUTES_IN_AN_HOUR + tm_utc.tm_min;
+	/* 0..671 */
+	int32_t slot = minutes / FIFTEEN_MINUTE_PERIOD;
+
+	if (slot >= MAXIMUM_ALLOWED_TIME_INTERVAL) {
+		return false;
+	}
+
+	int32_t byte = slot / INTERVAL_SIZE;
+	/* The most significant bit of a byte is earliest slot */
+	int32_t bit = (BITS_IN_BYTE - 1) - (slot % BITS_IN_BYTE);
+
+	return (schedule[byte] & (1 << bit)) != 0;
 }
 
