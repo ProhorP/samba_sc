@@ -36,6 +36,8 @@
 #undef DBGC_CLASS
 #define DBGC_CLASS            DBGC_DRS_REPL
 
+#define DEFAULT_REPLICATION_INTERVAL (15.0 * 60.0)
+
 /*
   update repsFrom/repsTo error information
  */
@@ -220,6 +222,7 @@ void dreplsrv_run_pull_ops(struct dreplsrv_service *s)
 	NTTIME now;
 	struct tevent_req *subreq;
 	WERROR werr;
+	bool perform_periodic_replication = false;
 
 	if (s->ops.n_current || s->ops.current) {
 		/* if there's still one running, we're done */
@@ -238,8 +241,6 @@ void dreplsrv_run_pull_ops(struct dreplsrv_service *s)
 	s->ops.current = op;
 	DLIST_REMOVE(s->ops.pending, op);
 
-	op->source_dsa->repsFrom1->last_attempt = now;
-
 	/* check if inbound replication is enabled */
 	if (!(op->options & DRSUAPI_DRS_SYNC_FORCED)) {
 		uint32_t rep_options;
@@ -252,7 +253,44 @@ void dreplsrv_run_pull_ops(struct dreplsrv_service *s)
 			werr = WERR_DS_DRA_SINK_DISABLED;
 			goto failed;
 		}
+
+		uint32_t replica_flags = op->options;
+		perform_periodic_replication =
+			!(replica_flags & DRSUAPI_DRS_DISABLE_PERIODIC_SYNC) &&
+			(replica_flags & DRSUAPI_DRS_PER_SYNC);
 	}
+
+	if (perform_periodic_replication) {
+		if (!drepl_is_time_scheduled(
+			    op->source_dsa->repsFrom1->schedule, t))
+		{
+			/* we tried to run current operation ahead of schedule
+			 */
+			DEBUG(2,("dreplsrv_run_pull_ops: Cancel current operation we running ahead of schedule.\n"));
+			/* unblock queue processing */
+			s->ops.current = NULL;
+			return;
+		}
+
+		/* TODO: Implement actual value */
+		const double replication_interval =
+			DEFAULT_REPLICATION_INTERVAL;
+		const double time_passed = difftime(
+			t,
+			nt_time_to_unix(
+				op->source_dsa->repsFrom1->last_attempt));
+		if (time_passed < replication_interval) {
+			/* we tried to run current operation ahead of schedule
+			 */
+			DEBUG(2,("dreplsrv_run_pull_ops: Cancel current operation not enough time has passed since "
+                     "last replication attempt - interval: %f time passed: %f.\n", replication_interval, time_passed));
+			/* unblock queue processing */
+			s->ops.current = NULL;
+			return;
+		}
+	}
+
+	op->source_dsa->repsFrom1->last_attempt = now;
 
 	subreq = dreplsrv_op_pull_source_send(op, s->task->event_ctx, op);
 	if (!subreq) {
