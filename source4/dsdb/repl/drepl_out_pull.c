@@ -44,11 +44,12 @@ void drepl_reps_update(struct dreplsrv_service *s, const char *reps_attr,
 		       struct GUID *source_dsa_obj_guid, WERROR status)
 {
 	struct repsFromToBlob *reps;
-	uint32_t count, i;
+	uint32_t count, i, j;
 	WERROR werr;
 	TALLOC_CTX *tmp_ctx = talloc_new(s);
 	time_t t;
 	NTTIME now;
+	const char *guid_str;
 
 	t = time(NULL);
 	unix_to_nt_time(&now, t);
@@ -80,6 +81,24 @@ void drepl_reps_update(struct dreplsrv_service *s, const char *reps_attr,
 		reps[i].ctr.ctr1.consecutive_sync_failures = 0;
 	} else {
 		reps[i].ctr.ctr1.consecutive_sync_failures++;
+	}
+
+	/*
+	 * remove replica from repsTo list of replicas if we have
+	 * WERR_DS_DRA_NO_REPLICA status
+	 */
+	if (strcmp(reps_attr, "repsTo") == 0
+	    && W_ERROR_EQUAL(status, WERR_DS_DRA_NO_REPLICA))
+	{
+		guid_str = GUID_string(tmp_ctx, &reps[i].ctr.ctr1.source_dsa_obj_guid);
+		DEBUG(2,("drepl_reps_update: removing %s due to %s.\n",
+			guid_str, win_errstr(werr)));
+		for (j=i;j<count-1; j++)
+		{
+			reps[j] = reps[j+1];
+		}
+		count--;
+		talloc_realloc(tmp_ctx, reps, struct repsFromToBlob, count);
 	}
 
 	werr = dsdb_savereps(s->samdb, tmp_ctx, dn, reps_attr, reps, count);
