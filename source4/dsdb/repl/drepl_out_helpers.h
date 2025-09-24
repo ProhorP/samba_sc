@@ -22,5 +22,6 @@
 #ifndef DREPL_OUT_HELPERS_H
 #define DREPL_OUT_HELPERS_H
 
+bool drepl_is_time_scheduled(const uint8_t schedule[84], time_t now);
 
 #endif /* DREPL_OUT_HELPERS_H */
