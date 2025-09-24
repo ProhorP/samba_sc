@@ -17,8 +17,8 @@
 #
 
 import samba.getopt as options
-from samba import sites, subnets
-from samba.domain.models import Site, Subnet
+from samba import schedule, sites, subnets
+from samba.domain.models import Site, Subnet, Connection
 from samba.domain.models.exceptions import ModelError
 from samba.netcmd import Command, CommandError, Option, SuperCommand
 
@@ -333,6 +333,233 @@ class cmd_sites_subnet(SuperCommand):
     }
 
 
+class cmd_sites_connection_list(Command):
+    """List connections."""
+
+    synopsis = "%prog <site> [options]"
+
+    takes_args = ["sitename"]
+
+    takes_optiongroups = {
+        "sambaopts": options.SambaOptions,
+        "versionopts": options.VersionOptions,
+        "credopts": options.CredentialsOptions,
+        "hostopts": options.HostOptions,
+    }
+
+    takes_options = [
+        Option("--json", help="Output results in JSON format.",
+               dest="output_format", action="store_const", const="json"),
+    ]
+
+    def run(self, sitename, hostopts=None, sambaopts=None, credopts=None,
+            versionopts=None, output_format=None):
+
+        ldb = self.ldb_connect(hostopts, sambaopts, credopts)
+
+        try:
+            site = Site.get(ldb, cn=sitename)
+        except ModelError as e:
+            raise CommandError(e)
+
+        # Check if site exists first.
+        if site is None:
+            raise CommandError(f"Site {sitename} not found.")
+
+        try:
+            site_dn = site.dn
+            connections_dict = {}
+
+            for connection in Connection.query(ldb, base_dn=site_dn):
+                connection_name = connection.cn
+                server_cn = connection.get_from_server_cn()
+                site_cn = site.cn
+
+                connections_dict[connection_name] = {
+                    'Connection': connection_name,
+                    'Server': server_cn,
+                    'Site': site_cn
+                }
+        except ModelError as e:
+            raise CommandError(e)
+
+        # Using json output format gives more detail.
+        if output_format == "json":
+            self.print_json(connections_dict)
+        else:
+            for connection_name, info in connections_dict.items():
+                self.outf.write(f"Connection: {info['Connection']}, Server: {info['Server']}, Site: {info['Site']}\n")
+
+
+class cmd_sites_connection_schedule_show(Command):
+    """Show current connection schedule."""
+
+    synopsis = "%prog <connection> [options]"
+
+    takes_args = ["connectionname"]
+
+    takes_optiongroups = {
+        "sambaopts": options.SambaOptions,
+        "versionopts": options.VersionOptions,
+        "credopts": options.CredentialsOptions,
+        "hostopts": options.HostOptions,
+    }
+
+    def run(self, connectionname, hostopts=None, sambaopts=None, credopts=None,
+            versionopts=None):
+        ldb = self.ldb_connect(hostopts, sambaopts, credopts)
+
+        try:
+            connection = Connection.get(ldb, cn=connectionname)
+        except ModelError as e:
+            raise CommandError(e)
+
+        # Check if connection exists first.
+        if connection is None:
+            raise CommandError(f"Connection {connectionname} not found.")
+
+        self.outf.write(f"ConnectionName: {connection.cn}\n")
+        self.outf.write(f"SourceComputerName: {connection.get_from_server_cn()}\n")
+        self.outf.write(f"BandwidthDetail: \n\n")
+
+        schedule.show_schedule(connection.schedule, self.outf.write)
+
+
+class cmd_sites_connection_schedule_set(Command):
+    """Set current connection schedule."""
+
+    synopsis = "%prog <connection_name> [options]"
+
+    takes_args = ["connection_name"]
+
+    takes_optiongroups = {
+        "sambaopts": options.SambaOptions,
+        "versionopts": options.VersionOptions,
+        "credopts": options.CredentialsOptions,
+        "hostopts": options.HostOptions,
+    }
+
+    takes_options = [
+        Option("--days", help="List of days (1=Monday through 7=Sunday), comma-separated",
+               dest="days", type=str, default=None),
+        Option("--hours", help="List of hours (1-24), comma-separated",
+               dest="hours", type=str, default=None),
+        Option("--slot", help="Amount of replication per hour: 0=None, 1=Once per Hour, 2=Twice per Hour, 3=Four Times per Hour",
+               dest="slot", type=int, default=None),
+    ]
+
+    def run(self, connection_name, hostopts=None, sambaopts=None, credopts=None,
+            versionopts=None, days=None, hours=None, slot=None):
+        samdb = self.ldb_connect(hostopts, sambaopts, credopts)
+
+        if days is None or hours is None or slot is None:
+            raise CommandError("--days, --hours, and --slot must be specified")
+
+        parsed_days = []
+        if days is not None:
+            try:
+                parsed_days = [int(d.strip()) for d in days.split(',')]
+                for day in parsed_days:
+                    if day < 1 or day > 7:
+                        raise ValueError(f"Day {day} must be between 1 (Monday) and 7 (Sunday)")
+            except ValueError as e:
+                raise CommandError(f"Invalid days format: {e}")
+
+        parsed_hours = []
+        if hours is not None:
+            try:
+                parsed_hours = [int(h.strip()) for h in hours.split(',')]
+                for hour in parsed_hours:
+                    if hour < 1 or hour > 24:
+                        raise ValueError(f"Hour {hour} must be between 1 and 24")
+            except ValueError as e:
+                raise CommandError(f"Invalid hours format: {e}")
+
+        if slot is None or slot < 0 or slot > 3:
+            raise CommandError(f"Slot {slot} must be between 0 and 3")
+
+        try:
+            connection = Connection.get(samdb, cn=connection_name)
+        except ModelError as e:
+            raise CommandError(e)
+
+        # Check if connection exists first.
+        if connection is None:
+            raise CommandError(f"Connection {connection_name} not found.")
+
+        samdb.transaction_start()
+        try:
+            new_schedule = schedule.set_schedule_slots(connection.schedule,
+                                                        parsed_days,
+                                                        parsed_hours,
+                                                        slot)
+            schedule.set_connection_schedule(samdb, connection, new_schedule)
+            samdb.transaction_commit()
+        except schedule.ScheduleException as e:
+            samdb.transaction_cancel()
+            raise CommandError("Error assigning new schedule to connection %s: %s" %
+                               (connection_name, e))
+
+        print(("New schedule has been assigned to connection %s" %
+               (connection_name)), file=self.outf)
+
+class cmd_sites_connection_schedule_apply_preset(Command):
+    """Apply predefined preset to current connection schedule."""
+
+    synopsis = "%prog <connection_name> <preset> [options]"
+
+    takes_args = ["connection_name", "preset" ]
+
+    takes_optiongroups = {
+        "sambaopts": options.SambaOptions,
+        "versionopts": options.VersionOptions,
+        "credopts": options.CredentialsOptions,
+        "hostopts": options.HostOptions,
+    }
+
+    def run(self, connection_name, preset, hostopts=None, sambaopts=None, credopts=None,
+            versionopts=None):
+        samdb = self.ldb_connect(hostopts, sambaopts, credopts)
+
+        try:
+            connection = Connection.get(samdb, cn=connection_name)
+        except ModelError as e:
+            raise CommandError(e)
+
+        # Check if connection exists first.
+        if connection is None:
+            raise CommandError(f"Connection {connection_name} not found.")
+
+        samdb.transaction_start()
+        try:
+            new_schedule = schedule.apply_schedule_preset(connection.schedule, preset)
+            schedule.set_connection_schedule(samdb, connection, new_schedule)
+            samdb.transaction_commit()
+        except schedule.ScheduleException as e:
+            samdb.transaction_cancel()
+            raise CommandError("Error assigning new schedule to connection %s: %s" %
+                               (connection_name, e))
+
+        print(("New schedule has been assigned to connection %s" %
+               (connection_name)), file=self.outf)
+
+class cmd_sites_connection_schedule(SuperCommand):
+    """Connection schedule management subcommands."""
+    subcommands = {
+        "show": cmd_sites_connection_schedule_show(),
+        "set": cmd_sites_connection_schedule_set(),
+        "preset": cmd_sites_connection_schedule_apply_preset(),
+    }
+
+
+class cmd_sites_connection(SuperCommand):
+    """Connection management subcommands."""
+    subcommands = {
+        "list": cmd_sites_connection_list(),
+        "schedule": cmd_sites_connection_schedule(),
+    }
+
+
 class cmd_sites(SuperCommand):
     """Sites management."""
     subcommands = {}
@@ -341,3 +568,4 @@ class cmd_sites(SuperCommand):
     subcommands["create"] = cmd_sites_create()
     subcommands["remove"] = cmd_sites_delete()
     subcommands["subnet"] = cmd_sites_subnet()
+    subcommands["connection"] = cmd_sites_connection()
