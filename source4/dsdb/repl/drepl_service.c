@@ -285,7 +285,16 @@ static NTSTATUS drepl_replica_sync(struct irpc_message *msg,
 
 	/* collect source DSAs to sync with */
 	if (req1->options & DRSUAPI_DRS_SYNC_ALL) {
+		bool source_found = false;
 		for (dsa = p->sources; dsa; dsa = dsa->next) {
+			/* Check for DRS_UPDATE_NOTIFICATION + !DRS_TWOWAY_SYNC + DRS_NEVER_NOTIFY */
+			if ((req1->options & DRSUAPI_DRS_UPDATE_NOTIFICATION) &&
+			    !(req1->options & DRSUAPI_DRS_TWOWAY_SYNC) &&
+			    (dsa->repsFrom1->replica_flags & DRSUAPI_DRS_NEVER_NOTIFY)) {
+				REPLICA_SYNC_FAIL("DRS_UPDATE_NOTIFICATION with NEVER_NOTIFY source",
+				                  WERR_DS_DRA_NO_REPLICA);
+			}
+			source_found = true;
 			/* schedule replication item */
 			werr = _drepl_schedule_replication(service, dsa, nc,
 							   req1->options, cb_data, msg);
@@ -293,6 +302,21 @@ static NTSTATUS drepl_replica_sync(struct irpc_message *msg,
 				REPLICA_SYNC_FAIL("_drepl_schedule_replication() failed",
 				                  werr);
 			}
+		}
+		/*
+		 *   rf := select all v in nc!repsFrom
+		 *		where DRS_SYNC_ALL in options
+		 *		or (DRS_SYNC_BYNAME in options
+		 *		and v.naDsa = msgIn.pszDsaSrc)
+		 *		or (not DRS_SYNC_BYNAME in options
+		 *		and v.uuidDsa = msgIn.uuidDsaSrc)
+		 *	if rf = null then
+		 *		return ERROR_DS_DRA_NO_REPLICA
+		 *	endif
+		 */
+		if (!source_found) {
+			REPLICA_SYNC_FAIL("No replication sources found",
+			                  WERR_DS_DRA_NO_REPLICA);
 		}
 	} else {
 		if (req1->options & DRSUAPI_DRS_SYNC_BYNAME) {
@@ -331,6 +355,13 @@ static NTSTATUS drepl_replica_sync(struct irpc_message *msg,
 					  werr);
 		}
 
+		/* Check for DRS_UPDATE_NOTIFICATION + !DRS_TWOWAY_SYNC + DRS_NEVER_NOTIFY */
+		if ((req1->options & DRSUAPI_DRS_UPDATE_NOTIFICATION) &&
+		    !(req1->options & DRSUAPI_DRS_TWOWAY_SYNC) &&
+		    (dsa->repsFrom1->replica_flags & DRSUAPI_DRS_NEVER_NOTIFY)) {
+			REPLICA_SYNC_FAIL("DRS_UPDATE_NOTIFICATION with NEVER_NOTIFY source",
+			                  WERR_DS_DRA_NO_REPLICA);
+		}
 		/* schedule replication item */
 		werr = _drepl_schedule_replication(service, dsa, nc,
 						   req1->options, cb_data, msg);
