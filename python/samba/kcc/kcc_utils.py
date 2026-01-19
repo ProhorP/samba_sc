@@ -2252,6 +2252,50 @@ def new_connection_schedule():
     schedule.dataArray = [data]
     return schedule
 
+def create_connection_schedule(link_sched, interval):
+    """ As per [MS-ADTS] 6.2.2.3.4.5 nTDSConnection Creation
+    LET schedule be a new SCHEDULE such that the first available time
+    is that of link_sched and each subsequent available
+    time is interval minutes after the previous
+    available time
+    
+    :param link_sched: The source SCHEDULE structure to base the new schedule on
+    :param interval: Interval in minutes between replication attempts
+    :return: New SCHEDULE structure with properly spaced slots
+    """
+    # Validate inputs
+    if not link_sched:
+        raise KCCError("link_sched cannot be None")
+    
+    if interval <= 0:
+        raise KCCError("interval must be positive")
+    
+    if interval % 15 != 0:
+        raise KCCError("interval must be divisible by 15")
+    
+    slot_spacing = interval // 15
+    
+    source_schedule = link_sched
+    
+    new_schedule = new_connection_schedule()
+    new_slots = [0x00] * 168
+    
+    source_slots = source_schedule.dataArray[0].slots
+
+    # Four 15-minutes slots per hour. And 168 hours per week.
+    max_schedule_slots = 168 * 4 
+    index = 0
+    while index < max_schedule_slots:
+        hour = index // 4
+        slots_taken = (1 << (index % 4))
+        if source_slots[hour] & slots_taken:
+            new_slots[hour] |= slots_taken
+            index += slot_spacing
+        else:
+            index += 1
+
+    new_schedule.dataArray[0].slots = new_slots
+    return new_schedule
 
 ##################################################
 # DNS related calls
