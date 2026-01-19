@@ -22,12 +22,26 @@
 
 import ldb
 from ldb import FLAG_MOD_ADD, FLAG_MOD_REPLACE, LdbError
+import datetime
 
 from samba.dcerpc import drsblobs
 from samba.ndr import ndr_unpack, ndr_pack
 
 from samba.kcc.kcc_utils import new_connection_schedule
 from samba.domain.models.connection import NTDSCONN_OPT_IS_GENERATED, NTDSCONN_OPT_USER_OWNED_SCHEDULE
+
+
+def get_utc_offset_hours():
+    """
+    Get the current system's UTC offset in hours as a float.
+    
+    Returns:
+        int: UTC offset in hours (positive for UTC+X, negative for UTC-X)
+    """
+    now = datetime.datetime.now()
+    utc_now = datetime.datetime.utcnow()
+    delta = utc_now - now
+    return int(delta.total_seconds() // 3600.0)
 
 
 class ScheduleException(Exception):
@@ -72,7 +86,7 @@ def show_schedule(schedule, outf_write, print_legend=False):
         day_row = f"│{day_name}│"
 
         for hour in range(24):
-            byte_pos = (day_idx * 24 + hour + 7) % len(schedule_data)
+            byte_pos = (day_idx * 24 + hour + get_utc_offset_hours()) % len(schedule_data)
 
             symbol = "  "
 
@@ -139,7 +153,7 @@ def set_schedule_slot(schedule, day, hour, slot):
 
     day_index = day - 1
     hour_index = hour - 1
-    data_index = (day_index * 24 + hour_index + 7) % len(schedule_data)
+    data_index = (day_index * 24 + hour_index + get_utc_offset_hours()) % len(schedule_data)
 
     slot_values = [0x00, 0x01, 0x05, 0x0F]
     new_value = slot_values[slot]
