@@ -509,7 +509,15 @@ class cmd_sites_connection_schedule_set(Command):
                (connection_name)), file=self.outf)
 
 class cmd_sites_connection_schedule_apply_preset(Command):
-    """Apply predefined preset to current connection schedule."""
+    """Apply predefined preset to current connection schedule.
+    
+    Available presets:
+    business_hours - Monday-Friday, 9 AM to 5 PM (4 times per hour)
+    weekends       - Saturday and Sunday, all day (4 times per hour)
+    off_hours      - Monday-Friday, 6 PM to 8 AM (2 times per hour)
+    all            - All days, all hours (4 times per hour)
+    none           - No replication at all
+    """
 
     synopsis = "%prog <connection_name> <preset> [options]"
 
