@@ -32,6 +32,7 @@ from samba.dcerpc import drsuapi, misc
 from samba.kcc.kcc_utils import Site, Partition, Transport, SiteLink
 from samba.kcc.kcc_utils import NCReplica, NCType, nctype_lut, GraphNode
 from samba.kcc.kcc_utils import RepsFromTo, KCCError, KCCFailedObject
+from samba.kcc.kcc_utils import create_connection_schedule
 from samba.kcc.graph import convert_schedule_to_repltimes
 
 from samba.ndr import ndr_pack
@@ -1760,7 +1761,7 @@ class KCC(object):
                 link_sched = None
             else:
                 link_opt = sitelink.options
-                link_sched = sitelink.schedule
+                link_sched = create_connection_schedule(sitelink.schedule, sitelink.interval)
 
             self.create_connection(part, rbh, rsite, transport,
                                    lbh, lsite, link_opt, link_sched,
