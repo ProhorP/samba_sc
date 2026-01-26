@@ -22,6 +22,17 @@ from samba.domain.models import Site, Subnet, Connection
 from samba.domain.models.exceptions import ModelError
 from samba.netcmd import Command, CommandError, Option, SuperCommand
 
+from .sitelinks import (
+    cmd_sitelinks_list,
+    cmd_sitelinks_view, 
+    cmd_site_links_create,
+    cmd_site_links_modify,
+    cmd_site_links_delete,
+    cmd_site_links_rename,
+    cmd_site_links_add_site,
+    cmd_site_links_delete_site,
+    cmd_site_links_schedule
+)
 
 class cmd_sites_list(Command):
     """List sites."""
@@ -572,6 +583,19 @@ class cmd_sites_connection(SuperCommand):
         "schedule": cmd_sites_connection_schedule(),
     }
 
+class cmd_sites_sitelinks(SuperCommand):
+    """Sitelink management subcommands."""
+    subcommands = {
+        "list": cmd_sitelinks_list(),
+        "view": cmd_sitelinks_view(),
+        "create": cmd_site_links_create(),
+        "modify": cmd_site_links_modify(),
+        "delete": cmd_site_links_delete(),
+        "rename": cmd_site_links_rename(),
+        "add-site": cmd_site_links_add_site(),
+        "delete-site": cmd_site_links_delete_site(),
+        "schedule": cmd_site_links_schedule(),
+    }
 
 class cmd_sites(SuperCommand):
     """Sites management."""
@@ -582,3 +606,4 @@ class cmd_sites(SuperCommand):
     subcommands["remove"] = cmd_sites_delete()
     subcommands["subnet"] = cmd_sites_subnet()
     subcommands["connection"] = cmd_sites_connection()
+    subcommands["sitelinks"] = cmd_sites_sitelinks()
