@@ -75,7 +75,7 @@ class cmd_sambatool(SuperCommand):
     subcommands["rodc"] = None
     subcommands["schema"] = None
     subcommands["shell"] = None
-    subcommands["sites"] = None
+    subcommands["sites"] = None    
     subcommands["spn"] = None
     subcommands["testparm"] = None
     subcommands["time"] = None
