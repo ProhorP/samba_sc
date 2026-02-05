@@ -2760,6 +2760,83 @@
 	<para>Assign a subnet to a site.</para>
 </refsect3>
 
+<refsect3>
+<title>sites connection list <replaceable>site</replaceable> [options]</title>
+<para>List connections for a site.</para>
+<variablelist>
+	<varlistentry>
+		<term>--json</term>
+		<listitem><para>
+			Output as JSON instead of a list
+		</para></listitem>
+	</varlistentry>
+</variablelist>
+</refsect3>
+
+<refsect3>
+<title>sites connection schedule show <replaceable>connection</replaceable> [options]</title>
+<para>Show current connection schedule.</para>
+</refsect3>
+
+<refsect3>
+<title>sites connection schedule set <replaceable>connection_name</replaceable> [options]</title>
+<para>Set current connection schedule.</para>
+<variablelist>
+	<varlistentry>
+		<term>--days=LIST_OF_DAYS</term>
+		<listitem><para>
+			List of days (1=Monday through 7=Sunday), comma-separated
+		</para></listitem>
+	</varlistentry>
+	<varlistentry>
+		<term>--hours=LIST_OF_HOURS</term>
+		<listitem><para>
+			List of hours (1-24), comma-separated
+		</para></listitem>
+	</varlistentry>
+	<varlistentry>
+		<term>--slot=SLOT_AMOUNT</term>
+		<listitem><para>
+			Amount of replication per hour: 0=None, 1=Once per Hour, 2=Twice per Hour, 3=Four Times per Hour
+		</para></listitem>
+	</varlistentry>
+</variablelist>
+</refsect3>
+
+<refsect3>
+<title>sites connection schedule preset <replaceable>connection_name</replaceable> <replaceable>preset</replaceable> [options]</title>
+<para>Apply predefined preset to current connection schedule.</para>
+<variablelist>
+	<varlistentry>
+		<term>Available presets:</term>
+		<listitem><para>
+			<variablelist>
+				<varlistentry>
+					<term>business_hours</term>
+					<listitem><para>Monday-Friday, 9 AM to 5 PM (4 times per hour)</para></listitem>
+				</varlistentry>
+				<varlistentry>
+					<term>weekends</term>
+					<listitem><para>Saturday and Sunday, all day (4 times per hour)</para></listitem>
+				</varlistentry>
+				<varlistentry>
+					<term>off_hours</term>
+					<listitem><para>Monday-Friday, 6 PM to 8 AM (2 times per hour)</para></listitem>
+				</varlistentry>
+				<varlistentry>
+					<term>all</term>
+					<listitem><para>All days, all hours (4 times per hour)</para></listitem>
+				</varlistentry>
+				<varlistentry>
+					<term>none</term>
+					<listitem><para>No replication at all</para></listitem>
+				</varlistentry>
+			</variablelist>
+		</para></listitem>
+	</varlistentry>
+</variablelist>
+</refsect3>
+
 <refsect2>
 	<title>spn</title>
 	<para>Manage Service Principal Names (SPN).</para>
