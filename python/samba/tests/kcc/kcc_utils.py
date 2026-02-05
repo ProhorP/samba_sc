@@ -21,6 +21,7 @@
 import samba
 import samba.tests
 from samba.kcc.kcc_utils import new_connection_schedule, drsblobs
+from samba.kcc.kcc_utils import create_connection_schedule
 from samba.kcc.kcc_utils import uncovered_sites_to_cover
 from samba.credentials import Credentials
 from samba.auth import system_session
@@ -35,6 +36,21 @@ class ScheduleTests(samba.tests.TestCase):
         self.assertIsInstance(schedule, drsblobs.schedule)
         self.assertEqual(schedule.size, 188)
         self.assertEqual(len(schedule.dataArray[0].slots), 168)
+
+    def test_create_connection_schedule_interval(self):
+        source_schedule = new_connection_schedule()
+        source_schedule.dataArray[0].slots = [0x0F] * 168
+        result_schedule = create_connection_schedule(source_schedule, 15)
+        self.assertEqual(len(result_schedule.dataArray[0].slots), 168)
+
+        for i in range(168):
+            self.assertEqual(result_schedule.dataArray[0].slots[i],
+                           source_schedule.dataArray[0].slots[i],
+                           f"Hour {i} schedule differs")
+
+        for i in range(168):
+            self.assertEqual(result_schedule.dataArray[0].slots[i], 0x0F,
+                           f"Hour {i} should have all 4 slots filled")
 
 
 # OK, this is pathetic, but the rest of it looks really hard, with the
