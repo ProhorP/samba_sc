@@ -61,7 +61,7 @@ class ConnectionNotFound(ScheduleException):
     pass
 
 
-def show_schedule(schedule, outf_write, print_legend=False):
+def show_schedule(schedule, outf_write, print_legend=False, sitelink_mode=False):
     """
     Display a replication schedule in a tabular format.
 
@@ -69,6 +69,8 @@ def show_schedule(schedule, outf_write, print_legend=False):
                      Schedules array, and Data field containing 168 bytes of time slots
     :param outf_write: Function that prints output to stdout similar to print
     :param print_legend: If we want to show user a legend
+    :param sitelink_mode: If True, shows simplified 2-state legend (enabled/disabled)
+                          If False, shows detailed 4-state legend for connections
     """
 
     schedule_data = ndr_unpack(drsblobs.schedule, schedule).dataArray[0].slots
@@ -97,14 +99,19 @@ def show_schedule(schedule, outf_write, print_legend=False):
                 # Check which bits are set (lower 4 bits only)
                 enabled_intervals = byte_val & 0x0F
 
-                if enabled_intervals == 0x00:
-                    symbol = "  "  # None
-                elif enabled_intervals == 0x01:
-                    symbol = "░░"  # Once per Hour (only first interval)
-                elif enabled_intervals == 0x05:
-                    symbol = "▒▒"  # Twice per Hour (first and third intervals)
-                elif enabled_intervals == 0x0F:
-                    symbol = "▓▓"  # Four Times per Hour (all intervals)
+                if sitelink_mode:
+                    # Two-state mode for sitelinks: enabled/disabled only
+                    symbol = "▓▓" if enabled_intervals != 0x00 else "  "
+                else:
+                    # Four-state mode for connections: detailed frequency
+                    if enabled_intervals == 0x00:
+                        symbol = "  "  # None
+                    elif enabled_intervals == 0x01:
+                        symbol = "░░"  # Once per Hour (only first interval)
+                    elif enabled_intervals == 0x05:
+                        symbol = "▒▒"  # Twice per Hour (first and third intervals)
+                    elif enabled_intervals == 0x0F:
+                        symbol = "▓▓"  # Four Times per Hour (all intervals)
             else:
                 print(len(schedule_data), byte_pos)
 
@@ -117,11 +124,18 @@ def show_schedule(schedule, outf_write, print_legend=False):
     outf_write("└─" + ("─" * 2 + "┴") * 24 + "──" + "┘\n\n")
 
     if print_legend:
-        outf_write("Legend:\n\n")
-        outf_write("[  ] - None (0x00)\n")
-        outf_write("[░░] - Once per Hour (0x01)\n")
-        outf_write("[▒▒] - Twice per Hour (0x05)\n")
-        outf_write("[▓▓] - Four Times per Hour (0x0f)\n")
+        if sitelink_mode:
+            # Two-state legend for sitelinks
+            outf_write("Legend:\n\n")
+            outf_write("[  ] - Disabled (no replication)\n")
+            outf_write("[▓▓] - Enabled (replication active)\n")
+        else:
+            # Four-state legend for connections
+            outf_write("Legend:\n\n")
+            outf_write("[  ] - None (0x00)\n")
+            outf_write("[░░] - Once per Hour (0x01)\n")
+            outf_write("[▒▒] - Twice per Hour (0x05)\n")
+            outf_write("[▓▓] - Four Times per Hour (0x0f)\n")
 
 def set_schedule_slot(schedule, day, hour, slot):
     """
