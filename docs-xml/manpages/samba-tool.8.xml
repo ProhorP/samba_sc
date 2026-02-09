@@ -2837,6 +2837,249 @@
 </variablelist>
 </refsect3>
 
+<refsect3>
+<title>sites sitelinks list [options]</title>
+<para>List sitelinks.</para>
+<variablelist>
+	<varlistentry>
+		<term>--json</term>
+		<listitem><para>
+			Output as JSON instead of a list
+		</para></listitem>
+	</varlistentry>
+	<varlistentry>
+		<term>--transport</term>
+		<listitem><para>
+			Transport type (ip or smtp)
+		</para></listitem>
+	</varlistentry>
+</variablelist>
+</refsect3>
+
+<refsect3>
+<title>sites sitelinks view <replaceable>sitelink</replaceable> [options]</title>
+<para>View one sitelink.</para>
+<variablelist>
+	<varlistentry>
+		<term>--transport</term>
+		<listitem><para>
+			Transport type (ip or smtp)
+		</para></listitem>
+	</varlistentry>
+</variablelist>
+</refsect3>
+
+<refsect3>
+<title>sites sitelinks create <replaceable>name</replaceable> --sites <replaceable>sites...</replaceable> [options]</title>
+<para>Create a new site-link.</para>
+<variablelist>
+	<varlistentry>
+		<term>--transport</term>
+		<listitem><para>
+			Transport type (ip or smtp)
+		</para></listitem>
+	</varlistentry>
+	<varlistentry>
+		<term>--sites</term>
+		<listitem><para>
+			Comma-separated list of sites
+		</para></listitem>
+	</varlistentry>
+	<varlistentry>
+		<term>--cost</term>
+		<listitem><para>
+			Replication cost (integer value)
+		</para></listitem>
+	</varlistentry>
+	<varlistentry>
+		<term>--repl-interval</term>
+		<listitem><para>
+			Replication interval in minutes
+		</para></listitem>
+	</varlistentry>
+	<varlistentry>
+		<term>--schedule</term>
+		<listitem><para>
+			Replication schedule - the name of one of the presets for schedule
+		</para></listitem>
+	</varlistentry>
+	<varlistentry>
+		<term>--options</term>
+		<listitem><para>
+			SiteLink options bit flags (0=No options, 1=USE_NOTIFY, 2=TWO_WAY_SYNC, 4=DISABLE_COMPRESSION)
+		</para></listitem>
+	</varlistentry>
+</variablelist>
+</refsect3>
+
+<refsect3>
+<title>sites sitelinks modify <replaceable>sitelink</replaceable> [options]</title>
+<para>Modify an existing site-link.</para>
+<variablelist>
+	<varlistentry>
+		<term>--transport</term>
+		<listitem><para>
+			Transport type (ip or smtp)
+		</para></listitem>
+	</varlistentry>
+	<varlistentry>
+		<term>--cost</term>
+		<listitem><para>
+			Replication cost (integer value)
+		</para></listitem>
+	</varlistentry>
+	<varlistentry>
+		<term>--repl-interval</term>
+		<listitem><para>
+			Replication interval in minutes
+		</para></listitem>
+	</varlistentry>
+	<varlistentry>
+		<term>--options</term>
+		<listitem><para>
+			SiteLink options bit flags (0=No options, 1=USE_NOTIFY, 2=TWO_WAY_SYNC, 4=DISABLE_COMPRESSION)
+		</para></listitem>
+	</varlistentry>
+</variablelist>
+</refsect3>
+
+<refsect3>
+<title>sites sitelinks delete <replaceable>name</replaceable> [options]</title>
+<para>Delete an existing site-link.</para>
+<variablelist>
+	<varlistentry>
+		<term>--transport</term>
+		<listitem><para>
+			Transport type (ip or smtp)
+		</para></listitem>
+	</varlistentry>
+</variablelist>
+</refsect3>
+
+<refsect3>
+<title>sites sitelinks rename <replaceable>old-name</replaceable> <replaceable>new-name</replaceable> [options]</title>
+<para>Rename an existing site-link.</para>
+<variablelist>
+	<varlistentry>
+		<term>--transport</term>
+		<listitem><para>
+			Transport type (ip or smtp)
+		</para></listitem>
+	</varlistentry>
+</variablelist>
+</refsect3>
+
+<refsect3>
+<title>sites sitelinks add-site <replaceable>sitelink</replaceable> <replaceable>site</replaceable> [options]</title>
+<para>Add a site to an existing site-link.</para>
+<variablelist>
+	<varlistentry>
+		<term>--transport</term>
+		<listitem><para>
+			Transport type (ip or smtp)
+		</para></listitem>
+	</varlistentry>
+</variablelist>
+</refsect3>
+
+<refsect3>
+<title>sites sitelinks delete-site <replaceable>sitelink</replaceable> <replaceable>site</replaceable> [options]</title>
+<para>Delete a site from an existing site-link.</para>
+<variablelist>
+	<varlistentry>
+		<term>--transport</term>
+		<listitem><para>
+			Transport type (ip or smtp)
+		</para></listitem>
+	</varlistentry>
+</variablelist>
+</refsect3>
+
+<refsect2>
+	<title>sites sitelinks schedule</title>
+	<para>Site-link schedule management through sites command.</para>
+</refsect2>
+
+<refsect3>
+	<title>sites sitelinks schedule show <replaceable>sitelink</replaceable> [options]</title>
+	<para>Show current site-link schedule.</para>
+	<variablelist>
+		<varlistentry>
+			<term>--transport</term>
+			<listitem><para>
+				Transport type (ip or smtp)
+			</para></listitem>
+		</varlistentry>
+		<varlistentry>
+			<term>--show-legend</term>
+			<listitem><para>
+				Show legend for schedule display
+			</para></listitem>
+		</varlistentry>
+	</variablelist>
+</refsect3>
+
+<refsect3>
+	<title>sites sitelinks schedule set <replaceable>sitelink_name</replaceable> [options]</title>
+	<para>Set current site-link schedule.</para>
+	<variablelist>
+		<varlistentry>
+			<term>--transport</term>
+			<listitem><para>
+				Transport type (ip or smtp)
+			</para></listitem>
+		</varlistentry>
+		<varlistentry>
+			<term>--days</term>
+			<listitem><para>
+				List of days (1=Monday through 7=Sunday), comma-separated
+			</para></listitem>
+		</varlistentry>
+		<varlistentry>
+			<term>--hours</term>
+			<listitem><para>
+				List of hours (1-24), comma-separated
+			</para></listitem>
+		</varlistentry>
+	</variablelist>
+</refsect3>
+
+<refsect3>
+	<title>sites sitelinks schedule preset <replaceable>sitelink_name</replaceable> <replaceable>preset</replaceable> [options]</title>
+	<para>Apply predefined preset to current site-link schedule.</para>
+	<variablelist>
+		<varlistentry>
+			<term>--transport</term>
+			<listitem><para>
+				Transport type (ip or smtp)
+			</para></listitem>
+		</varlistentry>
+		<varlistentry>
+			<term>Available presets:</term>
+			<listitem><para>
+				<variablelist>
+					<varlistentry>
+						<term>business_hours</term>
+						<listitem><para>Monday-Friday, 9 AM to 5 PM (4 times per hour)</para></listitem>
+					</varlistentry>
+					<varlistentry>
+						<term>weekends</term>
+						<listitem><para>Saturday and Sunday, all day (4 times per hour)</para></listitem>
+					</varlistentry>
+					<varlistentry>
+						<term>all</term>
+						<listitem><para>All days, all hours (4 times per hour)</para></listitem>
+					</varlistentry>
+					<varlistentry>
+						<term>none</term>
+						<listitem><para>No replication at all</para></listitem>
+					</varlistentry>
+				</variablelist>
+			</para></listitem>
+		</varlistentry>
+	</variablelist>
+</refsect3>
+
 <refsect2>
 	<title>spn</title>
 	<para>Manage Service Principal Names (SPN).</para>
