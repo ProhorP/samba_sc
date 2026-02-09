@@ -524,7 +524,7 @@ class cmd_site_links_schedule_show(Command):
         if sitelink.schedule is not None:
             sitelink_schedule = sitelink.schedule
 
-        schedule.show_schedule(sitelink_schedule, self.outf.write, show_legend)
+        schedule.show_schedule(sitelink_schedule, self.outf.write, show_legend, sitelink_mode=True)
 
 
 class cmd_site_links_schedule_apply_preset(Command):
