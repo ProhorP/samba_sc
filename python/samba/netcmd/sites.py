@@ -22,6 +22,7 @@ from samba.domain.models import Site, Subnet, Connection
 from samba.domain.models.exceptions import ModelError
 from samba.netcmd import Command, CommandError, Option, SuperCommand
 
+from .servers import cmd_servers_list
 from .sitelinks import (
     cmd_sitelinks_list,
     cmd_sitelinks_view, 
@@ -597,6 +598,12 @@ class cmd_sites_sitelinks(SuperCommand):
         "schedule": cmd_site_links_schedule(),
     }
 
+class cmd_sites_servers(SuperCommand):
+    """Server management subcommands."""
+    subcommands = {
+        "list": cmd_servers_list(),
+    }
+
 class cmd_sites(SuperCommand):
     """Sites management."""
     subcommands = {}
@@ -607,3 +614,4 @@ class cmd_sites(SuperCommand):
     subcommands["subnet"] = cmd_sites_subnet()
     subcommands["connection"] = cmd_sites_connection()
     subcommands["sitelinks"] = cmd_sites_sitelinks()
+    subcommands["servers"] = cmd_sites_servers()
