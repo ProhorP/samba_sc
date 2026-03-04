@@ -34,6 +34,7 @@ from .org import OrganizationalPerson, OrganizationalUnit
 from .person import Person
 from .registry import MODELS
 from .schema import AttributeSchema, ClassSchema
+from .server import Server
 from .site import Site
 from .sitelink import SiteLink
 from .subnet import Subnet
