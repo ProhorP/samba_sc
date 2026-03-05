@@ -3081,6 +3081,48 @@
 </refsect3>
 
 <refsect2>
+	<title>sites servers</title>
+	<para>Manage domain controllers within sites.</para>
+</refsect2>
+
+<refsect3>
+	<title>sites servers list <replaceable>site</replaceable> [options]</title>
+	<para>List domain controllers in a site.</para>
+	<variablelist>
+	<varlistentry>
+	<term>--json</term>
+	<listitem><para>
+	Output results in JSON format.
+	</para></listitem>
+	</varlistentry>
+	</variablelist>
+</refsect3>
+
+<refsect3>
+	<title>sites servers view <replaceable>server</replaceable> <replaceable>site</replaceable> [options]</title>
+	<para>View details of a domain controller in a site.</para>
+</refsect3>
+
+<refsect3>
+	<title>sites servers move <replaceable>servername</replaceable> --from <replaceable>source_site</replaceable> --to <replaceable>destination_site</replaceable> [options]</title>
+	<para>Move a domain controller from one site to another.</para>
+	<variablelist>
+	<varlistentry>
+	<term>--from</term>
+	<listitem><para>
+	Name of the source site (required).
+	</para></listitem>
+	</varlistentry>
+	<varlistentry>
+	<term>--to</term>
+	<listitem><para>
+	Name of the destination site (required).
+	</para></listitem>
+	</varlistentry>
+	</variablelist>
+</refsect3>
+
+<refsect2>
 	<title>spn</title>
 	<para>Manage Service Principal Names (SPN).</para>
 </refsect2>
