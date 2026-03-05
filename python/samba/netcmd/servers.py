@@ -69,3 +69,42 @@ class cmd_servers_list(Command):
         else:
             for server in servers_dict.keys():
                 self.outf.write(f"{server}\n")
+
+class cmd_servers_view(Command):
+    """View details of a domain controller in a site."""
+
+    synopsis = "%prog <server> <site> [options]"
+
+    takes_args = ["sitename", "servername"]
+
+    takes_optiongroups = {
+        "sambaopts": options.SambaOptions,
+        "versionopts": options.VersionOptions,
+        "credopts": options.CredentialsOptions,
+        "hostopts": options.HostOptions,
+    }
+
+    def run(self, sitename, servername, hostopts=None, sambaopts=None,
+            credopts=None, versionopts=None):
+
+        ldb = self.ldb_connect(hostopts, sambaopts, credopts)
+
+        try:
+            site = Site.get(ldb, cn=sitename)
+        except ModelError as e:
+            raise CommandError(e)
+
+        if site is None:
+            raise CommandError(f"Site {sitename} not found.")
+
+        servers_dn = Server.get_base_dn(ldb, site_cn=sitename)
+
+        try:
+            server = Server.get(ldb, cn=servername, base_dn=str(servers_dn))
+        except ModelError as e:
+            raise CommandError(e)
+
+        if server is None:
+            raise CommandError(f"Server {servername} not found in site {sitename}.")
+
+        self.print_json(server.as_dict())
