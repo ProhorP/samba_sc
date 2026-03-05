@@ -108,3 +108,78 @@ class cmd_servers_view(Command):
             raise CommandError(f"Server {servername} not found in site {sitename}.")
 
         self.print_json(server.as_dict())
+
+
+class cmd_servers_move(Command):
+    """Move a domain controller from one site to another."""
+
+    synopsis = "%prog <servername> --from <source_site> --to <destination_site> [options]"
+
+    takes_args = ["servername"]
+
+    takes_optiongroups = {
+        "sambaopts": options.SambaOptions,
+        "versionopts": options.VersionOptions,
+        "credopts": options.CredentialsOptions,
+        "hostopts": options.HostOptions,
+    }
+
+    takes_options = [
+        Option("--from", dest="source_site", required=True,
+               help="Name of the source site"),
+        Option("--to", dest="destination_site", required=True,
+               help="Name of the destination site"),
+    ]
+
+    def run(self, servername, source_site, destination_site, hostopts=None,
+            sambaopts=None, credopts=None, versionopts=None):
+
+        samdb = self.ldb_connect(hostopts, sambaopts, credopts)
+
+        try:
+            source_site_obj = Site.get(samdb, cn=source_site)
+        except ModelError as e:
+            raise CommandError(e)
+
+        if source_site_obj is None:
+            raise CommandError(f"Source site '{source_site}' not found.")
+
+        servers_dn = Server.get_base_dn(samdb, site_cn=source_site)
+        try:
+            server = Server.get(samdb, cn=servername, base_dn=str(servers_dn))
+        except ModelError as e:
+            raise CommandError(e)
+
+        if server is None:
+            raise CommandError(f"Server '{servername}' not found in source site '{source_site}'.")
+
+        try:
+            dest_site_obj = Site.get(samdb, cn=destination_site)
+        except ModelError as e:
+            raise CommandError(e)
+
+        if dest_site_obj is None:
+            raise CommandError(f"Destination site '{destination_site}' not found.")
+
+        dest_servers_dn = Server.get_base_dn(samdb, site_cn=destination_site)
+        try:
+            existing_server = Server.get(samdb, cn=servername, base_dn=str(dest_servers_dn))
+        except ModelError as e:
+            raise CommandError(e)
+
+        if existing_server is not None:
+            raise CommandError(f"Server '{servername}' already exists in destination site '{destination_site}'.")
+
+        samdb.transaction_start()
+        try:
+            old_dn = server.dn
+            new_dn = Server.get_base_dn(samdb, site_cn=destination_site)
+            new_dn.add_child(f"CN={servername}")
+            samdb.rename(old_dn, new_dn)
+
+            samdb.transaction_commit()
+        except Exception as e:
+            samdb.transaction_cancel()
+            raise CommandError(f"Error moving server '{servername}' from site '{source_site}' to site '{destination_site}': {e}")
+
+        self.outf.write(f"Server '{servername}' moved from site '{source_site}' to site '{destination_site}' successfully.\n")
