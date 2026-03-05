@@ -22,7 +22,7 @@ from samba.domain.models import Site, Subnet, Connection
 from samba.domain.models.exceptions import ModelError
 from samba.netcmd import Command, CommandError, Option, SuperCommand
 
-from .servers import cmd_servers_list, cmd_servers_view
+from .servers import cmd_servers_list, cmd_servers_view, cmd_servers_move
 from .sitelinks import (
     cmd_sitelinks_list,
     cmd_sitelinks_view, 
@@ -603,6 +603,7 @@ class cmd_sites_servers(SuperCommand):
     subcommands = {
         "list": cmd_servers_list(),
         "view": cmd_servers_view(),
+        "move": cmd_servers_move(),
     }
 
 class cmd_sites(SuperCommand):
