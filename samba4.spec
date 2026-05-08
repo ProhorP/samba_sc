@@ -129,7 +129,7 @@
 
 Name:    samba
 Version: 4.21.9
-Release: alt1
+Release: alt2.p11.1
 
 Group:   System/Servers
 Summary: The Samba4 CIFS and AD client and server suite
@@ -2375,6 +2375,12 @@ control role-sambashare enabled
 %endif
 
 %changelog
+* Fri May 08 2026 Evgeny Sinelnikov <sin@altlinux.org> 4.21.9-alt2.p11.1
+- Backport fixes from upstream and sisyphus:
+  + s3/librpc/crypto: Don't keep growing in memory keytab (thx Noel Power)
+  + third_party:heimdal:lib:roken: allow large fragmented UDP replies (thx Ivan Korytov)
+  + libgpo:admx: Fix missing presentaions for firewalld (thx Valentin Sokolov)
+
 * Fri Oct 24 2025 Evgeny Sinelnikov <sin@altlinux.org> 4.21.9-alt1
 - Update to security release of Samba 4.21
 - Security fixes (Fixes: CVE-2025-9640, CVE-2025-10230):
