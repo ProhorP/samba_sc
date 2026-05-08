@@ -1,0 +1,22 @@
+object ff3dd691f38e23f9ea8d18376df1b24ea9b335b6
+type commit
+tag samba-4.22.9
+tagger Björn Jacke <bjacke@samba.org> 1775726758 +0200
+
+samba: tag release samba-4.22.9
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEEgfXigyvSVFoYl7cTqplEL7aAtiAFAmnXcKYACgkQqplEL7aA
+tiBVaQ//bsE+8qi6Ih/t+gIz2XTN/+xbqMq3nRbSuxiFAh0qxYxHtoNMAQRvO+te
+kGBVJ9uRrbJD/2LkfYihiC+d8YHrE7Hvcc+hVRMgbvHwb0Bq6nMcj5fF4Kcu1AUW
+UgjedHzPgsALHf2o+fgpYPIULQ3U3X2n2+Pds30UeTrUjQdZdXy/qiCjKMa3K0FW
+RbWk/ghGO9qa/A8+7a3VgIuVeXyeoelhcjdLNqOpPTdzMyxage9Ukr1ak8yuPWuF
+9Y+dPmJollJU3CFD+2IhtrhjB5MiDubxVt/RCBtuPtGfSVSUPZvdk7UBpoXvXlCS
+s+KRjOlQsIylTj0xJs1vEqmVxmb62e1F2pTqbETyY3K8Ozs8m7nJ4+Mbq9flHJWQ
+tGkn6t/CT+2oVx3njrwd9VPspDo5wSgmSSfd0hFZ5bzquy8GS4YnY8sk07TlB8hX
+5sRGF+Zi6uXVPzl5XVV1BrJuxnOtpdD/CufebbTPVD01/qH0VdesiOEt25ML6XBJ
+XxEF5QVO6bs5CcFP569CYmsPbg3Egsbnu8ckbU93pNrxWguuoxgbB319A/hhpucr
+xzOJp/jiGTI7HHttSarUCYumGbcth2y2oW2v2VNILIQs4GmeqS6YgTX+Q+2+ZdKP
+Jtz4rLgB55jlVQ3rnQvhMm/UDXR2mv1fmBfx4939ZwAWc9ZZ4Bk=
+=dvg7
+-----END PGP SIGNATURE-----
