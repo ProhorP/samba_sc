@@ -268,6 +268,10 @@ class cmd_domain_passwordsettings_set(Command):
             else:
                 account_lockout_threshold = int(account_lockout_threshold)
 
+            if account_lockout_threshold < 0 or account_lockout_threshold > 999:
+                raise CommandError("Account lockout threshold "
+                                   "must be in the range of 0 to 999!")
+
             m["lockoutThreshold"] = ldb.MessageElement(str(account_lockout_threshold),
                                                        ldb.FLAG_MOD_REPLACE, "lockoutThreshold")
             msgs.append("Account lockout threshold changed!")
