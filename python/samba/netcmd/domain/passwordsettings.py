@@ -200,8 +200,8 @@ class cmd_domain_passwordsettings_set(Command):
             else:
                 min_pwd_len = int(min_pwd_length)
 
-            if min_pwd_len < 0 or min_pwd_len > 14:
-                raise CommandError("Minimum password length must be in the range of 0 to 14!")
+            if min_pwd_len < 0 or min_pwd_len > 128:
+                raise CommandError("Minimum password length must be in the range of 0 to 128!")
 
             m["minPwdLength"] = ldb.MessageElement(str(min_pwd_len),
                                                    ldb.FLAG_MOD_REPLACE, "minPwdLength")
