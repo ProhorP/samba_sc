@@ -129,7 +129,7 @@
 
 Name:    samba
 Version: 4.21.9
-Release: alt2.p11.1
+Release: alt3.p11.1
 
 Group:   System/Servers
 Summary: The Samba4 CIFS and AD client and server suite
@@ -2375,6 +2375,11 @@ control role-sambashare enabled
 %endif
 
 %changelog
+* Wed May 20 2026 Evgeny Sinelnikov <sin@altlinux.org> 4.21.9-alt3.p11.1
+- Update password policy management in samba-tool (thx Ivan Korytov):
+  + Add account lockout threshold limits.
+  + Increase minimum password length limit up to 128 (thx Ivan Volchenko).
+
 * Fri May 08 2026 Evgeny Sinelnikov <sin@altlinux.org> 4.21.9-alt2.p11.1
 - Backport fixes from upstream and sisyphus:
   + s3/librpc/crypto: Don't keep growing in memory keytab (thx Noel Power)
