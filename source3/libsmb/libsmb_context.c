@@ -798,6 +798,24 @@ void smbc_set_credentials_with_fallback(SMBCCTX *context,
 						    CRED_SPECIFIED);
 	}
 
+	if ((password == NULL || strlen(password) == 0) &&
+	    smbc_getOptionUseKerberos(context))
+	{
+		const char *error_string = NULL;
+		int rc;
+
+		rc = cli_credentials_set_ccache(creds,
+						context->internal->lp_ctx,
+						NULL,
+						CRED_SPECIFIED,
+						&error_string);
+		if (rc != 0) {
+			DBG_WARNING("Warning reading default "
+				    "krb5 credentials cache: %s\n",
+				    error_string);
+		}
+	}
+
 	TALLOC_FREE(context->internal->creds);
 	context->internal->creds = creds;
 }
