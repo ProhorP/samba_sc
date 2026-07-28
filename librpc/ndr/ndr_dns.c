@@ -200,21 +200,23 @@ _PUBLIC_ enum ndr_err_code ndr_push_dns_res_rec(struct ndr_push *ndr,
 	ndr_set_flags(&ndr->flags, LIBNDR_PRINT_ARRAY_HEX |
 				   LIBNDR_FLAG_NOALIGN);
 	if (ndr_flags & NDR_SCALARS) {
-		libndr_flags _flags_save_name = ndr->flags;
-
 		NDR_CHECK(ndr_push_align(ndr, 4));
 
 		switch (r->rr_type) {
-		case DNS_QTYPE_TKEY:
-		case DNS_QTYPE_TSIG:
-			ndr_set_flags(&ndr->flags, LIBNDR_FLAG_NO_COMPRESSION);
+		case DNS_QTYPE_A:
+		case DNS_QTYPE_NS:
+		case DNS_QTYPE_CNAME:
+		case DNS_QTYPE_SOA:
+		case DNS_QTYPE_PTR:
+		case DNS_QTYPE_HINFO:
+		case DNS_QTYPE_MX:
+		case DNS_QTYPE_TXT:
 			break;
 		default:
+			ndr_set_flags(&ndr->flags, LIBNDR_FLAG_NO_COMPRESSION);
 			break;
 		}
 		NDR_CHECK(ndr_push_dns_string(ndr, NDR_SCALARS, r->name));
-		ndr->flags = _flags_save_name;
-
 		NDR_CHECK(ndr_push_dns_qtype(ndr, NDR_SCALARS, r->rr_type));
 		NDR_CHECK(ndr_push_dns_qclass(ndr, NDR_SCALARS, r->rr_class));
 		NDR_CHECK(ndr_push_uint32(ndr, NDR_SCALARS, r->ttl));
