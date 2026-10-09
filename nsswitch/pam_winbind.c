@@ -12,6 +12,8 @@
 
 #include "pam_winbind.h"
 
+#define SMARTCARD_SOCKET "/run/samba/winbindd/smartcard"
+
 enum pam_winbind_request_type
 {
 	PAM_WINBIND_AUTHENTICATE,
@@ -2760,6 +2762,89 @@ static int openpam_convert_error_code(struct pwb_context *ctx,
 #define pam_error_code(a, b, c) (c)
 #endif
 
+/*
+ * return 0 == SUCCESS
+ * return -1 == FAIL
+ * return 1 == FAIL CONNECT
+ */
+static int get_token_name(struct pwb_context *ctx,
+			  const char *query,
+			  char **token_name)
+{
+
+	int ret = 0;
+	int client_fd = -1;
+	struct sockaddr_un server_addr = {0};
+	char buffer[1024];
+
+	if ((client_fd = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {
+		_pam_log(ctx, LOG_ERR, "socket failed %d\n", client_fd);
+		ret = -1;
+		goto done;
+	}
+
+	memset(&server_addr, 0, sizeof(struct sockaddr_un));
+	server_addr.sun_family = AF_UNIX;
+	strncpy(server_addr.sun_path,
+		SMARTCARD_SOCKET,
+		sizeof(server_addr.sun_path) - 1);
+
+	if (connect(client_fd,
+		    (struct sockaddr *)&server_addr,
+		    sizeof(struct sockaddr_un)) == -1)
+	{
+		_pam_log(ctx, LOG_ERR, "connect failed %d\n", -1);
+		ret = 1;
+		goto done;
+	}
+
+	if (write(client_fd, query, strlen(query)) == -1) {
+		_pam_log(ctx,
+			 LOG_ERR,
+			 "write in smartcard soket failed %d\n",
+			 -1);
+		ret = -1;
+		goto done;
+	}
+
+	ssize_t bytes_received = read(client_fd, buffer, sizeof(buffer) - 1);
+	if (bytes_received > 0) {
+		buffer[bytes_received] = '\0';
+
+		const char *error_text = "user not found";
+		if (strlen(error_text) == bytes_received &&
+		    memcmp(error_text, buffer, bytes_received) == 0)
+		{
+			_pam_log(ctx,
+				 LOG_ERR,
+				 "current message = %s\n",
+				 buffer);
+			ret = -1;
+			goto done;
+		}
+
+		*token_name = talloc_strdup(ctx, buffer);
+		if (*token_name == NULL) {
+			_pam_log(ctx, LOG_ERR, "talloc_strdup failed %d\n", -1);
+			ret = -1;
+			goto done;
+		}
+	} else {
+		_pam_log(ctx,
+			 LOG_ERR,
+			 "read from smartcard soket failed %d\n",
+			 -1);
+		ret = -1;
+		goto done;
+	}
+
+done:
+	if (client_fd != -1)
+		close(client_fd);
+
+	return ret;
+}
+
 _PUBLIC_ PAM_EXTERN
 int pam_sm_authenticate(pam_handle_t *pamh, int flags,
 			int argc, const char **argv)
@@ -2831,9 +2916,35 @@ int pam_sm_authenticate(pam_handle_t *pamh, int flags,
 		}
 	}
 
-	retval = _winbind_read_password(ctx, ctx->ctrl, NULL,
-					_("Password: "), NULL,
-					&password);
+	char *token_name = NULL;
+	const char *text_get_token = talloc_asprintf(ctx,
+						     "get %s",
+						     real_username);
+	if (text_get_token == NULL) {
+		_pam_log(ctx, LOG_ERR, "talloc_asprintf");
+		retval = PAM_AUTHTOK_ERR;
+		goto out;
+	}
+	if (get_token_name(ctx, text_get_token, &token_name) < 0) {
+		_pam_log(ctx, LOG_ERR, "get_token_name: fail");
+	}
+
+	if (token_name) {
+		const char *text_get_pin = talloc_asprintf(ctx,
+							   "PIN(%s): ",
+							   token_name);
+		if (text_get_pin == NULL) {
+			_pam_log(ctx, LOG_ERR, "talloc_asprintf");
+			retval = PAM_AUTHTOK_ERR;
+			goto out;
+		}
+		retval = _winbind_read_password(
+			ctx, ctx->ctrl, NULL, _(text_get_pin), NULL, &password);
+	} else {
+
+		retval = _winbind_read_password(
+			ctx, ctx->ctrl, NULL, _("Password: "), NULL, &password);
+	}
 
 	if (retval != PAM_SUCCESS) {
 		_pam_log(ctx, LOG_ERR,
