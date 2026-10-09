@@ -49,6 +49,7 @@
 #include "../lib/util/pidfile.h"
 #include "librpc/gen_ndr/ndr_winbind_c.h"
 #include "lib/util/util_process.h"
+#include "winbindd_sc.h"
 
 #undef DBGC_CLASS
 #define DBGC_CLASS DBGC_WINBIND
@@ -1889,6 +1890,47 @@ static bool fork_domain_child(struct winbindd_child *child)
 		DEBUG(1, ("tevent_add_fd failed\n"));
 		_exit(1);
 	}
+
+#if !defined(SAMBA4_USES_HEIMDAL) /* MIT version */
+	if (child_domain && child_domain->domain_type == 2 && lp_cert_auth()) {
+		unlink(SMARTCARD_SOCKET);
+		if (access(SMARTCARD_SOCKET, F_OK) == 0) {
+			DEBUG(0, ("socket %s exist\n", SMARTCARD_SOCKET));
+		} else {
+
+			pid_t pid = fork();
+
+			if (pid == 0) {
+				/* Child */
+
+				status = winbindd_reinit_after_fork(
+					child, lp_cert_logfile());
+
+				if (!NT_STATUS_IS_OK(status)) {
+					DEBUG(1,
+					      ("winbindd_reinit_after_fork "
+					       "failed: "
+					       "%s\n",
+					       nt_errstr(status)));
+					_exit(0);
+				}
+
+				signal(SIGTERM, sigterm_smartcard);
+
+				process_set_title(
+					"smartcard[%s]",
+					"domain child [%s](smartcard)",
+					child_domain->name);
+
+				smartcard_do(wb_child_domain());
+
+				_exit(0);
+			} else {
+				/* Parent */
+			}
+		}
+	}
+#endif /* MIT version */
 
 	while (1) {
 
