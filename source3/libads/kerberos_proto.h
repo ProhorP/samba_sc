@@ -108,6 +108,13 @@ NTSTATUS kerberos_return_pac(TALLOC_CTX *mem_ctx,
 			     char **_canon_realm,
 			     struct PAC_DATA_CTR **pac_data_ctr);
 
+NTSTATUS kerberos_return_pac_only(TALLOC_CTX *mem_ctx,
+				  time_t time_offset,
+				  const char *cache_name,
+				  const char *impersonate_princ_s,
+				  const char *local_service,
+				  struct PAC_DATA_CTR **pac_data_ctr);
+
 /* The following definitions come from libads/krb5_setpw.c  */
 
 ADS_STATUS ads_krb5_set_password(const char *princ,

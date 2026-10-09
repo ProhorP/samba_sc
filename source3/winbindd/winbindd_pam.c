@@ -56,6 +56,7 @@
 #include "lib/crypto/gnutls_helpers.h"
 #include <gnutls/crypto.h>
 #include "lib/global_contexts.h"
+#include "winbindd_sc.h"
 
 #undef DBGC_CLASS
 #define DBGC_CLASS DBGC_WINBIND
@@ -834,6 +835,36 @@ static NTSTATUS winbindd_raw_kerberos_login(TALLOC_CTX *mem_ctx,
 		return NT_STATUS_NO_MEMORY;
 	}
 
+	bool cert_auth = false;
+#if !defined(SAMBA4_USES_HEIMDAL) /* MIT version */
+	struct cert_auth_info cert_fields = {0};
+	if (lp_cert_auth()) {
+		if (get_cert_fields(mem_ctx, name_user, &cert_fields) != 0) {
+			DEBUG(10, ("get_cert_fields: fail\n"));
+		} else {
+			/* kerberos auth by smartcard only root */
+			result = kerberos_auth_pin(lp_cert_krb5_forked(),
+						   mem_ctx,
+						   principal_s,
+						   &cert_fields,
+						   pass,
+						   0, /* time_offset */
+						   cc,
+						   true,
+						   uid,
+						   &ticket_lifetime,
+						   &renewal_until,
+						   &canon_principal,
+						   &canon_realm);
+			if (!NT_STATUS_IS_OK(result)) {
+				DEBUG(0,
+				      ("kerberos_auth_pin  ret %s\n",
+				       nt_errstr(result)));
+				goto after_login;
+			}
+		}
+	}
+#endif /* MIT version */
 
 	/* if this is a user ccache, we need to act as the user to let the krb5
 	 * library handle the chown, etc. */
@@ -845,31 +876,51 @@ static NTSTATUS winbindd_raw_kerberos_login(TALLOC_CTX *mem_ctx,
 		DEBUG(10,("winbindd_raw_kerberos_login: uid is %d\n", uid));
 	}
 
-	/*
-	 * Note cc can be NULL, it means
-	 * kerberos_return_pac() will use
-	 * a temporary krb5 ccache internally.
-	 */
-	result = kerberos_return_pac(mem_ctx,
-				     principal_s,
-				     pass,
-				     0, /* time_offset */
-				     &ticket_lifetime,
-				     &renewal_until,
-				     cc,
-				     true,
-				     true,
-				     WINBINDD_PAM_AUTH_KRB5_RENEW_TIME,
-				     NULL,
-				     local_service,
-				     &canon_principal,
-				     &canon_realm,
-				     &pac_data_ctr);
+#if !defined(SAMBA4_USES_HEIMDAL) /* MIT version */
+	if (cert_fields.token_name) {
+		cert_auth = true;
+		result = kerberos_return_pac_only(mem_ctx,
+						  0, /* time_offset */
+						  cc,
+						  NULL,
+						  local_service,
+						  &pac_data_ctr);
+		if (!NT_STATUS_IS_OK(result)) {
+			DEBUG(0,
+			      ("kerberos_return_pac_only  ret %s\n",
+			       nt_errstr(result)));
+		}
+	}
+#endif /* MIT version */
+	if (cert_auth == false) {
+
+		/*
+		 * Note cc can be NULL, it means
+		 * kerberos_return_pac() will use
+		 * a temporary krb5 ccache internally.
+		 */
+		result = kerberos_return_pac(mem_ctx,
+					     principal_s,
+					     pass,
+					     0, /* time_offset */
+					     &ticket_lifetime,
+					     &renewal_until,
+					     cc,
+					     true,
+					     true,
+					     WINBINDD_PAM_AUTH_KRB5_RENEW_TIME,
+					     NULL,
+					     local_service,
+					     &canon_principal,
+					     &canon_realm,
+					     &pac_data_ctr);
+	}
 	if (user_ccache_file != NULL) {
 		gain_root_privilege();
 	}
 
 	/************************ RETURNED TO ROOT **********************/
+after_login:
 
 	if (!NT_STATUS_IS_OK(result)) {
 		goto failed;
