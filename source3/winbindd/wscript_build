@@ -183,6 +183,7 @@ bld.SAMBA3_SUBSYSTEM('winbindd-lib',
                     winbindd_wins_byname.c
                     winbindd_msrpc.c
                     winbindd_rpc.c
+                    winbindd_sc.c
                     winbindd_reconnect.c
                     winbindd_reconnect_ads.c
                     winbindd_ads.c

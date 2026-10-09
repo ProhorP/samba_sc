@@ -65,6 +65,21 @@ int kerberos_kinit_passwords_ext(const char *given_principal,
 				 char **_canon_principal,
 				 char **_canon_realm,
 				 NTSTATUS *ntstatus);
+#if !defined(SAMBA4_USES_HEIMDAL) /* MIT version */
+int kerberos_kinit_pin_ext(TALLOC_CTX *mem_ctx,
+			   const char *principal_name,
+			   const char *pin,
+			   int time_offset,
+			   const char *identity,
+			   const char *cache_name,
+			   bool request_pac,
+			   uid_t uid,
+			   time_t renewable_time,
+			   time_t *expire_time,
+			   time_t *renew_till_time,
+			   char **canon_principal,
+			   char **canon_realm);
+#endif /* MIT version */
 int ads_kdestroy(const char *cc_name);
 
 int kerberos_kinit_password(const char *principal,

@@ -929,6 +929,298 @@ int kerberos_kinit_passwords_ext(const char *given_principal,
 	return first_ret;
 }
 
+#if !defined(SAMBA4_USES_HEIMDAL) /* MIT version */
+/* Callback response to the request PIN */
+static krb5_error_code pin_responder(krb5_context ctx,
+				     void *data,
+				     krb5_responder_context rctx)
+{
+	krb5_error_code kerr = EAGAIN;
+	const char *pin = (const char *)data;
+	const char *const *question_list = krb5_responder_list_questions(ctx,
+									 rctx);
+
+	if (question_list == NULL)
+		goto done;
+
+	for (size_t c = 0; question_list[c] != NULL; c++) {
+		DEBUG(10, ("Got question [%s].\n", question_list[c]));
+		/* find request PKINIT */
+		if (strcmp(question_list[c], "pkinit") == 0) {
+			krb5_responder_pkinit_challenge *challenge = NULL;
+
+			kerr = krb5_responder_pkinit_get_challenge(ctx,
+								   rctx,
+								   &challenge);
+			if (kerr != 0 || challenge == NULL) {
+				DEBUG(0,
+				      ("krb5_responder_pkinit_get_challenge "
+				       "failed.\n"));
+				goto done;
+			}
+
+			DEBUG(10,
+			      ("Responder: PKINIT challenge "
+			       "found, setting PIN...\n"));
+
+			kerr = krb5_responder_pkinit_set_answer(
+				ctx,
+				rctx,
+				challenge->identities[0]->identity,
+				pin);
+
+			if (kerr != 0)
+				DEBUG(0,
+				      ("krb5_responder_pkinit_set_answer "
+				       "failed.\n"));
+
+			krb5_responder_pkinit_challenge_free(ctx,
+							     rctx,
+							     challenge);
+
+			goto done;
+		}
+	}
+
+done:
+	return kerr;
+}
+
+int kerberos_kinit_pin_ext(TALLOC_CTX *mem_ctx,
+			   const char *principal_name,
+			   const char *pin,
+			   int time_offset,
+			   const char *identity,
+			   const char *cache_name,
+			   bool request_pac,
+			   uid_t uid,
+			   time_t renewable_time,
+			   time_t *expire_time,
+			   time_t *renew_till_time,
+			   char **canon_principal,
+			   char **canon_realm)
+{
+	krb5_error_code ret;
+
+	krb5_context ctx = NULL;
+	krb5_principal client = NULL;
+	krb5_get_init_creds_opt *opts = NULL;
+	krb5_creds creds = {0};
+	bool creds_init = false;
+	krb5_init_creds_context icc = NULL;
+	krb5_ccache ccache = NULL;
+	krb5_verify_init_creds_opt vopt = {0};
+	bool change_uid = false;
+	smb_krb5_addresses *addr = NULL;
+
+	ret = smb_krb5_init_context_common(&ctx);
+	if (ret) {
+		DBG_ERR("smb_krb5_init_context_common failed (%s)\n",
+			error_message(ret));
+		goto done;
+	}
+
+	if (time_offset != 0) {
+		krb5_set_real_time(ctx, time(NULL) + time_offset, 0);
+	}
+
+	ret = smb_krb5_parse_name(ctx, principal_name, &client);
+	if (ret) {
+		DBG_ERR("krb5_parse_name failed (%s)\n", error_message(ret));
+		goto done;
+	}
+
+	ret = krb5_get_init_creds_opt_alloc(ctx, &opts);
+	if (ret) {
+		DBG_ERR("krb5_get_init_creds_opt_alloc (%s)\n",
+			error_message(ret));
+		goto done;
+	}
+
+	/* WINBIND opt */
+	/* Turn on canonicalization for lower case realm support */
+#ifdef SAMBA4_USES_HEIMDAL
+	krb5_get_init_creds_opt_set_win2k(ctx, opts, true);
+	krb5_get_init_creds_opt_set_canonicalize(ctx, opts, true);
+#else  /* MIT */
+	krb5_get_init_creds_opt_set_canonicalize(opts, true);
+#endif /* MIT */
+
+	krb5_get_init_creds_opt_set_renew_life(opts, renewable_time);
+	krb5_get_init_creds_opt_set_forwardable(opts, True);
+
+#ifdef HAVE_KRB5_GET_INIT_CREDS_OPT_SET_PAC_REQUEST
+	if (request_pac) {
+		if ((ret = krb5_get_init_creds_opt_set_pac_request(ctx,
+								   opts,
+								   true)))
+		{
+			DBG_ERR("krb5_get_init_creds_opt_set_pac_request "
+				"(%s)\n",
+				error_message(ret));
+			goto done;
+		}
+	}
+#endif
+
+	if ((ret = smb_krb5_gen_netbios_krb5_address(&addr, lp_netbios_name())))
+	{
+		DBG_ERR("smb_krb5_gen_netbios_krb5_address (%s)\n",
+			error_message(ret));
+		goto done;
+	}
+	krb5_get_init_creds_opt_set_address_list(opts, addr->addrs);
+
+	/* SmartCard opt */
+	ret = krb5_get_init_creds_opt_set_pa(ctx,
+					     opts,
+					     "X509_user_identity",
+					     identity);
+	if (ret != 0) {
+		DBG_ERR("krb5_get_init_creds_opt_set_pa failed (%s)\n",
+			error_message(ret));
+		goto done;
+	}
+
+	/* set responder callback with forward PIN */
+	krb5_get_init_creds_opt_set_responder(ctx,
+					      opts,
+					      pin_responder,
+					      (void *)pin);
+
+	/* Init and get credentials */
+	ret = krb5_init_creds_init(ctx, client, NULL, NULL, 0, opts, &icc);
+	if (ret) {
+		DBG_ERR("krb5_init_creds_init (%s)\n", error_message(ret));
+		goto done;
+	}
+
+	ret = krb5_init_creds_get(ctx, icc);
+	if (ret) {
+		DBG_ERR("krb5_init_creds_get (%s)\n", error_message(ret));
+		goto done;
+	}
+
+	DEBUG(10, ("Kerberos authentication succeeded for %s.\n", identity));
+
+	ret = krb5_init_creds_get_creds(ctx, icc, &creds);
+	if (ret) {
+		DBG_ERR("krb5_init_creds_get_creds (%s)\n", error_message(ret));
+		goto done;
+	}
+	creds_init = true;
+
+	/* verify creds */
+	krb5_verify_init_creds_opt_init(&vopt);
+	krb5_verify_init_creds_opt_set_ap_req_nofail(&vopt, 1);
+	ret = krb5_verify_init_creds(ctx, &creds, NULL, NULL, NULL, &vopt);
+
+	if (ret == 0) {
+		DEBUG(10,
+		      ("TGT verified using key for [%s].\n", principal_name));
+	} else {
+		DEBUG(0,
+		      ("TGT failed verification using key "
+		       "for [%s].\n",
+		       principal_name));
+		goto done;
+	}
+
+	/* if this is a user ccache, we need to act as the user to let the krb5
+	 * library handle the chown, etc. */
+
+	/************************ ENTERING NON-ROOT **********************/
+	set_effective_uid(uid);
+	DEBUG(10, ("krb5_auth: uid is %d\n", uid));
+	change_uid = true;
+
+	if ((ret = krb5_cc_resolve(ctx,
+				   cache_name ? cache_name
+					      : smb_force_krb5_cc_default_name(
+							ctx),
+				   &ccache)))
+	{
+		DBG_ERR("krb5_cc_resolve (%s)\n", error_message(ret));
+		goto done;
+	}
+
+	ret = krb5_cc_initialize(ctx, ccache, creds.client);
+	if (ret) {
+		DBG_ERR("krb5_cc_initialize (%s)\n", error_message(ret));
+		goto done;
+	}
+
+	ret = krb5_cc_store_cred(ctx, ccache, &creds);
+	if (ret) {
+		DBG_ERR("krb5_cc_store_cred (%s)\n", error_message(ret));
+		goto done;
+	}
+
+	DEBUG(10, ("Child: save cache success %d\n", getuid()));
+
+	/* return values for WINBIND */
+	*expire_time = (time_t)creds.times.endtime;
+
+	*renew_till_time = (time_t)creds.times.renew_till;
+
+	ret = smb_krb5_unparse_name(mem_ctx, ctx, client, canon_principal);
+	if (ret != 0) {
+		DBG_ERR("smb_krb5_unparse_name (%s)\n", error_message(ret));
+		goto done;
+	}
+
+	*canon_realm = smb_krb5_principal_get_realm(mem_ctx, ctx, client);
+	if (canon_realm == NULL) {
+		ret = ENOMEM;
+		DBG_ERR("smb_krb5_principal_get_realm (%s)\n",
+			error_message(ret));
+		goto done;
+	}
+
+	/*************** test *************/
+#if(0)
+	DATA_BLOB sesskey1 = data_blob_null;
+	DATA_BLOB tkt = data_blob_null;
+	ret = ads_krb5_cli_get_ticket(mem_ctx,
+				      "VM05WB$@AD19.ALT",
+				      28,
+				      &tkt,
+				      &sesskey1,
+				      0,
+				      "KEYRING:persistent:10000",
+				      NULL,
+				      NULL);
+	if (ret) {
+		DEBUG(0, ("ads_krb5_cli_get_ticket: ret=%d\n", ret));
+		goto done;
+	}
+#endif
+	/************* test *************/
+
+done:
+	if (change_uid)
+		gain_root_privilege();
+
+	/************************ RETURNED TO ROOT **********************/
+	if (addr)
+		smb_krb5_free_addresses(ctx, addr);
+	if (ccache)
+		krb5_cc_close(ctx, ccache);
+	if (creds_init)
+		krb5_free_cred_contents(ctx, &creds);
+	if (icc)
+		krb5_init_creds_free(ctx, icc);
+	if (opts)
+		krb5_get_init_creds_opt_free(ctx, opts);
+	if (client)
+		krb5_free_principal(ctx, client);
+	if (ctx)
+		krb5_free_context(ctx);
+
+	return ret;
+}
+#endif /* MIT version */
+
 int ads_kdestroy(const char *cc_name)
 {
 	krb5_error_code code;

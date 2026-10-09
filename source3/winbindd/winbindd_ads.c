@@ -1550,4 +1550,9 @@ struct winbindd_methods ads_methods = {
 	.trusted_domains	= trusted_domains,
 };
 
+ADS_STATUS ads_cached_connection_ldap(struct winbindd_domain *domain,
+				      ADS_STRUCT **adsp)
+{
+	return ads_cached_connection(domain, adsp);
+}
 #endif
