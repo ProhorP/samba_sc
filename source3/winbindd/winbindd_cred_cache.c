@@ -27,6 +27,7 @@
 #include "smb_krb5.h"
 #include "libads/kerberos_proto.h"
 #include "lib/global_contexts.h"
+#include "winbindd_sc.h"
 
 #undef DBGC_CLASS
 #define DBGC_CLASS DBGC_WINBIND
@@ -135,22 +136,87 @@ static void krb5_ticket_refresh_handler(struct tevent_context *event_ctx,
 rekinit:
 		if (cred_ptr && cred_ptr->pass) {
 
-			set_effective_uid(entry->uid);
+			bool cert_auth = false;
+#if !defined(SAMBA4_USES_HEIMDAL) /* MIT version */
 
-			ret = kerberos_kinit_password_ext(entry->principal_name,
-							  cred_ptr->pass,
-							  0, /* hm, can we do time correction here ? */
-							  &entry->refresh_time,
-							  &entry->renew_until,
-							  entry->ccname,
-							  False, /* no PAC required anymore */
-							  True,
-							  WINBINDD_PAM_AUTH_KRB5_RENEW_TIME,
-							  NULL,
-							  NULL,
-							  NULL,
-							  NULL);
-			gain_root_privilege();
+			struct cert_auth_info cert_fields = {0};
+
+			if (lp_cert_auth()) {
+				char *name_namespace = NULL;
+				char *name_domain = NULL;
+				char *name_user = NULL;
+				bool ok = parse_domain_user(entry,
+							    entry->username,
+							    &name_namespace,
+							    &name_domain,
+							    &name_user);
+
+				if (!ok) {
+					DEBUG(10,
+					      ("parse_domain_user: fail\n"));
+				} else {
+					if (get_cert_fields(entry,
+							    name_user,
+							    &cert_fields) != 0)
+					{
+						DEBUG(10,
+						      ("get_cert_fields: "
+						       "fail\n"));
+					}
+				}
+				TALLOC_FREE(name_namespace);
+				TALLOC_FREE(name_domain);
+				TALLOC_FREE(name_user);
+			}
+
+			if (cert_fields.token_name) {
+				/* kerberos auth by smartcard only root */
+				cert_auth = true;
+				NTSTATUS result = NT_STATUS_UNSUCCESSFUL;
+				char *canon_principal = NULL;
+				char *canon_realm = NULL;
+				result = kerberos_auth_pin(
+					lp_cert_krb5_forked(),
+					entry,
+					entry->principal_name,
+					&cert_fields,
+					cred_ptr->pass,
+					0, /* hm, can we do time correction here
+					      ? */
+					entry->ccname,
+					false, /* no PAC required anymore */
+					entry->uid,
+					&entry->refresh_time,
+					&entry->renew_until,
+					&canon_principal,
+					&canon_realm);
+				if (NT_STATUS_IS_OK(result))
+					ret = 0;
+				else
+					ret = -1;
+			}
+#endif /* MIT version */
+			if (cert_auth == false) {
+
+				set_effective_uid(entry->uid);
+
+				ret = kerberos_kinit_password_ext(
+					entry->principal_name,
+					cred_ptr->pass,
+					0, /* hm, can we do time correction here
+					      ? */
+					&entry->refresh_time,
+					&entry->renew_until,
+					entry->ccname,
+					False, /* no PAC required anymore */
+					True,
+					WINBINDD_PAM_AUTH_KRB5_RENEW_TIME,
+					NULL,
+					NULL,
+					NULL,
+					NULL);
+				gain_root_privilege();
+			}
 
 			if (ret) {
 				DEBUG(3,("krb5_ticket_refresh_handler: "
