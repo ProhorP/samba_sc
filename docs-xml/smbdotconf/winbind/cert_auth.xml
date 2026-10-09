@@ -1,0 +1,13 @@
+<samba:parameter name="cert auth"
+                 context="G"
+                 type="boolean"
+                 xmlns:samba="http://www.samba.org/samba/DTD/samba-doc">
+<description>
+	<para>The
+	 <citerefentry><refentrytitle>winbindd</refentrytitle> 
+		 <manvolnum>8</manvolnum></citerefentry> parameter, which allows cert authentication.
+	 </para>
+</description>
+
+<value type="default">no</value>
+</samba:parameter>

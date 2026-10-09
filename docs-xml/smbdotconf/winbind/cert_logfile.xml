@@ -1,0 +1,12 @@
+<samba:parameter name="cert logfile"
+                 context="G"
+                 type="string"
+                 xmlns:samba="http://www.samba.org/samba/DTD/samba-doc">
+<description>
+	<para>The <citerefentry><refentrytitle>winbindd</refentrytitle>
+			<manvolnum>8</manvolnum></citerefentry> certificate authentication log file
+	</para>
+</description>
+
+<value type="default">/var/log/samba/log.smartcard</value>
+</samba:parameter>

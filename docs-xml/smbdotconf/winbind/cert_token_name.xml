@@ -1,0 +1,12 @@
+<samba:parameter name="cert token name"
+                 context="G"
+                 type="string"
+                 xmlns:samba="http://www.samba.org/samba/DTD/samba-doc">
+<description>
+	<para>The <citerefentry><refentrytitle>winbindd</refentrytitle>
+			<manvolnum>8</manvolnum></citerefentry> token name by JaCarta-2 SE
+	</para>
+</description>
+
+<value type="default">NONAME</value>
+</samba:parameter>

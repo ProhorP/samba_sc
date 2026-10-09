@@ -1,0 +1,12 @@
+<samba:parameter name="cert db path"
+                 context="G"
+                 type="string"
+                 xmlns:samba="http://www.samba.org/samba/DTD/samba-doc">
+<description>
+	<para>The <citerefentry><refentrytitle>winbindd</refentrytitle>
+			<manvolnum>8</manvolnum></citerefentry> path to cacert.pem
+	</para>
+</description>
+
+<value type="default">/etc/pki/tls/certs/cacert.pem</value>
+</samba:parameter>

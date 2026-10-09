@@ -1,0 +1,14 @@
+<samba:parameter name="cert krb5 forked"
+                 context="G"
+                 type="boolean"
+                 xmlns:samba="http://www.samba.org/samba/DTD/samba-doc">
+<description>
+	<para>The
+	 <citerefentry><refentrytitle>winbindd</refentrytitle> 
+		 <manvolnum>8</manvolnum></citerefentry> has a leak when authenticating by pin (valgrind has determined).
+		 To circumvent the leak, you can enable authentication in a separate temporary process.
+	 </para>
+</description>
+
+<value type="default">no</value>
+</samba:parameter>

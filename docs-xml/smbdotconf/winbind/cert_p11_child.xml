@@ -1,0 +1,12 @@
+<samba:parameter name="cert p11 child"
+                 context="G"
+                 type="string"
+                 xmlns:samba="http://www.samba.org/samba/DTD/samba-doc">
+<description>
+	<para>The <citerefentry><refentrytitle>winbindd</refentrytitle>
+			<manvolnum>8</manvolnum></citerefentry> module that communicates with the smartcard 
+	</para>
+</description>
+
+<value type="default">/dev/null</value>
+</samba:parameter>
