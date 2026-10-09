@@ -129,7 +129,7 @@
 
 Name:    samba
 Version: 4.22.11
-Release: alt3
+Release: alt4
 
 Group:   System/Servers
 Summary: The Samba4 CIFS and AD client and server suite
@@ -2377,6 +2377,9 @@ control role-sambashare enabled
 %endif
 
 %changelog
+* Fri Oct 09 2026 Petr Usoltsev <usoltsevpv@altlinux.org> 4.22.11-alt4
+- Add smartcard support in WINBIND.
+
 * Sat Aug 29 2026 Evgeny Sinelnikov <sin@altlinux.org> 4.22.11-alt3
 - Fix resolve srv records as in windows option default value.
 - Backport fixes from upstream (Samba#14638, Samba#15973, Samba#16067,
